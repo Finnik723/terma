@@ -1,0 +1,59 @@
+schema: spec-driven
+
+context: |
+  Language: Russian
+  All artifacts must be written in Russian.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+  Greenfield thermodynamic modelling project; no application exists yet.
+  Read AGENTS.md and docs/project-foundation.md for REQ-*, SCN-* and PROP-*.
+  Use docs/domain-glossary.md, docs/architecture.md, docs/adr/README.md,
+  docs/open-questions.md and docs/development-workflow.md; link rather than duplicate.
+  Preserve traceability to source IDs and ADR; proposals are not accepted decisions.
+  Current authorization is OpenSpec setup and application-scaffold planning for review only.
+  Do not implement code, install application dependencies, deploy infrastructure,
+  access the VPS, request secrets, apply tasks or archive this unimplemented change.
+  Work on a separate Git branch and submit a PR, never directly to main.
+  Windows 10 development must not require WSL2, Docker or access to the user's VPS.
+  HCh/Unitherm interfaces and compatibility are unknown; do not invent them.
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always state what is out of scope
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
+
+rules:
+  proposal:
+    - Separate observed state, proposed scope and exclusions.
+  specs:
+    - Use stable requirement and scenario IDs, and links to source requirements and ADR.
+    - Distinguish build, process startup, HTTP interaction, infrastructure availability and integration checks.
+  design:
+    - Link docs/technology-baseline.md for exact versions and official evidence instead of duplicating the table.
+    - Separate Windows checks without Docker, Linux CI and future PostgreSQL/Kafka integration checks.
+  tasks:
+    - Keep implementation tasks unchecked; each must state an observable result and verification method.
+
+operations:
+  apply:
+    guidance:
+      - Start only after a new explicit user request authorizes implementation of the reviewed change.
+  archive:
+    guidance:
+      - Never archive or sync an unimplemented proposal into main specs as delivered behavior.
