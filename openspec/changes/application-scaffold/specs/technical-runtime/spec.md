@@ -4,7 +4,7 @@
 
 Определяет технически проверяемый запуск каркаса и связь frontend/backend без подмены запуска процесса готовностью инфраструктуры или научной функциональности.
 
-Статус: согласованные требования application-scaffold; фактическое выполнение отражено в tasks и отчёте проверки. Основания: `REQ-ARCH-001`, `REQ-ARCH-003`, `REQ-ENV-001`, `REQ-UI-004`, `REQ-UI-005` из [основы проекта](../../../../../docs/project-foundation.md), [ADR-0001](../../../../../docs/adr/0001-monorepo-and-boundaries.md), [ADR-0005](../../../../../docs/adr/0005-selected-stack-and-async-boundary.md). Технические проверки не выполняют предметный `SCN-STUB-001` и не реализуют научную заглушку.
+Статус: согласованные требования application-scaffold; фактическое выполнение отражено в tasks и отчёте проверки. Основания: `REQ-ARCH-001`, `REQ-ARCH-003`, `REQ-ENV-001`, `REQ-UI-004`, `REQ-UI-005` из [основы проекта](../../../../../docs/project-foundation.md), [ADR-0001](../../../../../docs/adr/0001-monorepo-and-boundaries.md), [ADR-0005](../../../../../docs/adr/0005-selected-stack-and-async-boundary.md). Технические проверки не выполняют предметные `SCN-SOLVER-001`–`SCN-SOLVER-003` и не реализуют расчётную подсистему. Прежний `SCN-STUB-001` отменён решением [ADR-0010](../../../../../docs/adr/0010-prototype-minimization-solver.md); требования REQ-BOOT и их приёмка этим не меняются.
 
 ## ADDED Requirements
 
