@@ -11,7 +11,11 @@ context: |
   Preserve traceability to source IDs and ADR; proposals are not accepted decisions.
   The user approved application-scaffold design and its required technology subset.
   Implement its tasks, install required dependencies and run local/CI checks.
-  Do not add domain features, scientific contracts/stub, jobs, database/broker integration,
+  The prototype now requires actual simplified minimization and distinct input/output (ADR-0010,
+  REQ-SCI-008 through REQ-SCI-012); echoing inputs without calculation was superseded.
+  The method, model, data and numerical acceptance examples remain open (Q-SCI-004 through Q-SCI-006).
+  This decision updates documentation only; a solver change needs its own reviewed SDD artifacts.
+  Keep application-scaffold free of domain features, a solver/scientific contracts, jobs, database/broker integration,
   outbox, series, transfer or CSV. Never deploy infrastructure, access the VPS or request secrets.
   Temurin 25.0.4.1+1 was explicitly approved instead of 25.0.5+8 (no Windows asset).
   Do not archive before implementation review; check moved and incoming links at future archive.
