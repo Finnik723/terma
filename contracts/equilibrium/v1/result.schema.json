@@ -139,6 +139,13 @@
                     "amountMol": {
                       "type": "number",
                       "exclusiveMinimum": 0
+                    },
+                    "properties": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "urn:terma:equilibrium:1.0:common#/$defs/property"
+                      },
+                      "minItems": 0
                     }
                   },
                   "required": [

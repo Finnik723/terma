@@ -1,0 +1,96 @@
+{
+  "contractVersion": "1.0",
+  "implementation": {
+    "adapter": {
+      "id": "documentation-example",
+      "version": "1"
+    },
+    "engine": {
+      "id": "no-engine-hand-authored",
+      "version": "1"
+    },
+    "modelKind": "DEMONSTRATION"
+  },
+  "supportedContractVersions": [
+    "1.0",
+    "1.1"
+  ],
+  "supportedModes": [
+    "CLOSED"
+  ],
+  "supportedPhaseModels": [
+    {
+      "id": "demo:pure-phase",
+      "versionId": "v1"
+    }
+  ],
+  "availableProperties": [
+    {
+      "code": "GIBBS_ENERGY",
+      "scope": "SYSTEM",
+      "valueType": "NUMBER",
+      "unit": "J",
+      "referenceConventionRequired": true,
+      "description": "Синтетический пример метаданных, не объявление работающего ядра."
+    },
+    {
+      "code": "GIBBS_ENERGY",
+      "scope": "PHASE",
+      "valueType": "NUMBER",
+      "unit": "J",
+      "referenceConventionRequired": true,
+      "description": "Синтетический пример метаданных, не объявление работающего ядра."
+    },
+    {
+      "code": "ACTIVITY",
+      "scope": "SPECIES",
+      "valueType": "NUMBER",
+      "unit": "1",
+      "referenceConventionRequired": false,
+      "description": "Синтетический пример метаданных, не объявление работающего ядра."
+    },
+    {
+      "code": "ACTIVITY_COEFFICIENT",
+      "scope": "SPECIES",
+      "valueType": "NUMBER",
+      "unit": "1",
+      "referenceConventionRequired": false,
+      "description": "Синтетический пример метаданных, не объявление работающего ядра."
+    },
+    {
+      "code": "CHEMICAL_POTENTIAL",
+      "scope": "SPECIES",
+      "valueType": "NUMBER",
+      "unit": "J/mol",
+      "referenceConventionRequired": true,
+      "description": "Синтетический пример метаданных, не объявление работающего ядра."
+    }
+  ],
+  "supportedSolverOptions": [
+    {
+      "name": "maxIterations",
+      "valueType": "INTEGER",
+      "unit": "1",
+      "minimum": 1,
+      "default": 1000
+    },
+    {
+      "name": "balanceAbsoluteToleranceMol",
+      "valueType": "NUMBER",
+      "unit": "mol",
+      "default": 1e-08
+    },
+    {
+      "name": "balanceRelativeTolerance",
+      "valueType": "NUMBER",
+      "unit": "1",
+      "minimum": 0,
+      "default": 1e-08
+    }
+  ],
+  "limits": {
+    "maxElements": 2,
+    "maxSpecies": 1,
+    "maxPhases": 1
+  }
+}

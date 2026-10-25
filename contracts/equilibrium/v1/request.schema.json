@@ -38,7 +38,7 @@
     "requirements": {
       "type": "array",
       "items": {
-        "$ref": "urn:terma:equilibrium:1.0:common#/$defs/propertyCode"
+        "$ref": "urn:terma:equilibrium:1.0:common#/$defs/propertyRequirement"
       },
       "minItems": 0,
       "uniqueItems": true,

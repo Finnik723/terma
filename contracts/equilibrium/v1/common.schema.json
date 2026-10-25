@@ -118,7 +118,10 @@
           "enum": [
             "GIBBS_ENERGY",
             "PH",
-            "VOLUME"
+            "VOLUME",
+            "ACTIVITY",
+            "ACTIVITY_COEFFICIENT",
+            "CHEMICAL_POTENTIAL"
           ]
         },
         {
@@ -131,19 +134,7 @@
       "type": "object",
       "properties": {
         "code": {
-          "anyOf": [
-            {
-              "enum": [
-                "GIBBS_ENERGY",
-                "PH",
-                "VOLUME"
-              ]
-            },
-            {
-              "type": "string",
-              "pattern": "^[a-z][a-z0-9.-]*:[A-Za-z][A-Za-z0-9._-]*$"
-            }
-          ]
+          "$ref": "urn:terma:equilibrium:1.0:common#/$defs/propertyCode"
         },
         "value": {
           "type": "number"
@@ -165,6 +156,73 @@
       "additionalProperties": false,
       "allOf": [
         {
+          "$ref": "urn:terma:equilibrium:1.0:common#/$defs/standardPropertyUnits"
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "GIBBS_ENERGY"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {},
+            "required": [
+              "referenceConvention"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "CHEMICAL_POTENTIAL"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {},
+            "required": [
+              "referenceConvention"
+            ]
+          }
+        }
+      ]
+    },
+    "phaseType": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Z][A-Z0-9_]*$",
+      "examples": [
+        "SOLID",
+        "LIQUID",
+        "AQUEOUS",
+        "GAS",
+        "FLUID",
+        "OTHER"
+      ]
+    },
+    "contractVersionIdentifier": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?![\\s\\S])"
+    },
+    "propertyScope": {
+      "enum": [
+        "SYSTEM",
+        "PHASE",
+        "SPECIES"
+      ]
+    },
+    "standardPropertyUnits": {
+      "allOf": [
+        {
           "if": {
             "properties": {
               "code": {
@@ -180,10 +238,7 @@
               "unit": {
                 "const": "J"
               }
-            },
-            "required": [
-              "referenceConvention"
-            ]
+            }
           }
         },
         {
@@ -223,20 +278,538 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "ACTIVITY"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "ACTIVITY_COEFFICIENT"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "CHEMICAL_POTENTIAL"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {
+              "unit": {
+                "const": "J/mol"
+              }
+            }
+          }
         }
       ]
     },
-    "phaseType": {
-      "type": "string",
-      "minLength": 1,
-      "pattern": "^[A-Z][A-Z0-9_]*$",
-      "examples": [
-        "SOLID",
-        "LIQUID",
-        "AQUEOUS",
-        "GAS",
-        "FLUID",
-        "OTHER"
+    "standardPropertyScopes": {
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "GIBBS_ENERGY"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {
+              "scope": {
+                "enum": [
+                  "SYSTEM",
+                  "PHASE"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "PH"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {
+              "scope": {
+                "enum": [
+                  "PHASE"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "VOLUME"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {
+              "scope": {
+                "enum": [
+                  "SYSTEM",
+                  "PHASE"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "ACTIVITY"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {
+              "scope": {
+                "enum": [
+                  "SPECIES"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "ACTIVITY_COEFFICIENT"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {
+              "scope": {
+                "enum": [
+                  "SPECIES"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "CHEMICAL_POTENTIAL"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {
+              "scope": {
+                "enum": [
+                  "SPECIES"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "propertyRequirement": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "$ref": "urn:terma:equilibrium:1.0:common#/$defs/propertyCode"
+        },
+        "scope": {
+          "$ref": "urn:terma:equilibrium:1.0:common#/$defs/propertyScope"
+        }
+      },
+      "required": [
+        "code",
+        "scope"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "$ref": "urn:terma:equilibrium:1.0:common#/$defs/standardPropertyScopes"
+        }
+      ]
+    },
+    "propertyDescriptor": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "$ref": "urn:terma:equilibrium:1.0:common#/$defs/propertyCode"
+        },
+        "valueType": {
+          "const": "NUMBER"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "$ref": "urn:terma:equilibrium:1.0:common#/$defs/propertyScope"
+        },
+        "referenceConventionRequired": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "code",
+        "valueType",
+        "unit",
+        "scope",
+        "referenceConventionRequired",
+        "description"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "$ref": "urn:terma:equilibrium:1.0:common#/$defs/standardPropertyUnits"
+        },
+        {
+          "$ref": "urn:terma:equilibrium:1.0:common#/$defs/standardPropertyScopes"
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "GIBBS_ENERGY"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {
+              "referenceConventionRequired": {
+                "const": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "PH"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {
+              "referenceConventionRequired": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "VOLUME"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {
+              "referenceConventionRequired": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "ACTIVITY"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {
+              "referenceConventionRequired": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "ACTIVITY_COEFFICIENT"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {
+              "referenceConventionRequired": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "CHEMICAL_POTENTIAL"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "then": {
+            "properties": {
+              "referenceConventionRequired": {
+                "const": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "solverOptionDescriptor": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "enum": [
+            "maxIterations",
+            "balanceAbsoluteToleranceMol",
+            "balanceRelativeTolerance"
+          ]
+        },
+        "valueType": {
+          "enum": [
+            "INTEGER",
+            "NUMBER"
+          ]
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minimum": {
+          "type": "number"
+        },
+        "exclusiveMinimum": {
+          "type": "number"
+        },
+        "maximum": {
+          "type": "number"
+        },
+        "default": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "name",
+        "valueType",
+        "unit"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "maxIterations"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "properties": {
+              "valueType": {
+                "const": "INTEGER"
+              },
+              "unit": {
+                "const": "1"
+              },
+              "minimum": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "maximum": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "default": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "not": {
+              "required": [
+                "exclusiveMinimum"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "balanceAbsoluteToleranceMol"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "properties": {
+              "valueType": {
+                "const": "NUMBER"
+              },
+              "unit": {
+                "const": "mol"
+              },
+              "minimum": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "maximum": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "default": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "exclusiveMinimum": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "balanceRelativeTolerance"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "properties": {
+              "valueType": {
+                "const": "NUMBER"
+              },
+              "unit": {
+                "const": "1"
+              },
+              "minimum": {
+                "type": "number",
+                "minimum": 0
+              },
+              "maximum": {
+                "type": "number",
+                "minimum": 0
+              },
+              "default": {
+                "type": "number",
+                "minimum": 0
+              },
+              "exclusiveMinimum": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "required": [
+              "minimum",
+              "exclusiveMinimum"
+            ]
+          }
+        }
       ]
     }
   }

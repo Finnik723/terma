@@ -12,6 +12,8 @@ context: |
   Preserve traceability to source IDs and ADR; proposals are not accepted decisions.
   Current scope is equilibrium-engine-contract: documentation, evidence, ADR, JSON Schemas,
   synthetic examples and validation only (REQ-STAGE-005, ADR-0011, docs/solver-contract.md).
+  PR 4 review explicitly authorizes committed validation tools and pinned dependencies,
+  Windows/Linux CI checks, scoped requirements including SPECIES and explicit version negotiation.
   The prototype requires actual simplified computation; echoing input is cancelled (ADR-0010).
   Fix the application contract separately from HCh's unknown internal API and runtime.
   No solver/adapter implementation, optimizer installation, computation module, Java DTO,

@@ -33,7 +33,7 @@
     "supportedContractVersions": {
       "type": "array",
       "items": {
-        "const": "1.0"
+        "$ref": "urn:terma:equilibrium:1.0:common#/$defs/contractVersionIdentifier"
       },
       "minItems": 1,
       "uniqueItems": true
@@ -57,84 +57,18 @@
     "availableProperties": {
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "$ref": "urn:terma:equilibrium:1.0:common#/$defs/propertyCode"
-          },
-          "valueType": {
-            "const": "NUMBER"
-          },
-          "unit": {
-            "type": "string",
-            "minLength": 1
-          },
-          "scope": {
-            "enum": [
-              "SYSTEM",
-              "PHASE"
-            ]
-          },
-          "referenceConventionRequired": {
-            "type": "boolean"
-          },
-          "description": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "code",
-          "valueType",
-          "unit",
-          "scope",
-          "referenceConventionRequired",
-          "description"
-        ],
-        "additionalProperties": false
+        "$ref": "urn:terma:equilibrium:1.0:common#/$defs/propertyDescriptor"
       },
-      "minItems": 0
+      "minItems": 0,
+      "uniqueItems": true
     },
     "supportedSolverOptions": {
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "enum": [
-              "maxIterations",
-              "balanceAbsoluteToleranceMol",
-              "balanceRelativeTolerance"
-            ]
-          },
-          "valueType": {
-            "enum": [
-              "INTEGER",
-              "NUMBER"
-            ]
-          },
-          "unit": {
-            "type": "string",
-            "minLength": 1
-          },
-          "minimum": {
-            "type": "number"
-          },
-          "maximum": {
-            "type": "number"
-          },
-          "default": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "name",
-          "valueType",
-          "unit"
-        ],
-        "additionalProperties": false
+        "$ref": "urn:terma:equilibrium:1.0:common#/$defs/solverOptionDescriptor"
       },
-      "minItems": 0
+      "minItems": 0,
+      "uniqueItems": true
     },
     "limits": {
       "type": "object",
