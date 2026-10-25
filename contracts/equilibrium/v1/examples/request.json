@@ -1,0 +1,29 @@
+{
+  "contractVersion": "1.0",
+  "calculationId": "calc-001",
+  "conditions": {
+    "temperatureK": 310,
+    "pressurePa": 100000
+  },
+  "system": {
+    "mode": "CLOSED",
+    "elementAmountsMol": {
+      "H": 2,
+      "O": 1
+    }
+  },
+  "chemicalSystemRef": {
+    "id": "demo-water-system",
+    "versionId": "v1"
+  },
+  "thermodynamicDataRef": {
+    "id": "demo-data",
+    "versionId": "v1"
+  },
+  "requirements": [],
+  "solverOptions": {
+    "maxIterations": 1000,
+    "balanceAbsoluteToleranceMol": 1e-8,
+    "balanceRelativeTolerance": 1e-8
+  }
+}

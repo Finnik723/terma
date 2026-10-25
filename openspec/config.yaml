@@ -4,21 +4,28 @@ context: |
   Language: Russian
   All artifacts must be written in Russian.
   Keep OpenSpec structural headings and SHALL/MUST keywords in English.
-  Thermodynamic modelling project; application-scaffold implementation is now authorized.
+  Thermodynamic modelling project. Application-scaffold is implemented, built and verified;
+  PR 2 is merged and scaffold versions are pinned. Do not restart its implementation.
   Read AGENTS.md and docs/project-foundation.md for REQ-*, SCN-* and PROP-*.
   Use docs/domain-glossary.md, docs/architecture.md, docs/adr/README.md,
   docs/open-questions.md and docs/development-workflow.md; link rather than duplicate.
   Preserve traceability to source IDs and ADR; proposals are not accepted decisions.
-  The user approved application-scaffold design and its required technology subset.
-  Implement its tasks, install required dependencies and run local/CI checks.
-  The prototype now requires actual simplified minimization and distinct input/output (ADR-0010,
-  REQ-SCI-008 through REQ-SCI-012); echoing inputs without calculation was superseded.
-  The method, model, data and numerical acceptance examples remain open (Q-SCI-004 through Q-SCI-006).
-  This decision updates documentation only; a solver change needs its own reviewed SDD artifacts.
-  Keep application-scaffold free of domain features, a solver/scientific contracts, jobs, database/broker integration,
-  outbox, series, transfer or CSV. Never deploy infrastructure, access the VPS or request secrets.
+  Current scope is equilibrium-engine-contract: documentation, evidence, ADR, JSON Schemas,
+  synthetic examples and validation only (REQ-STAGE-005, ADR-0011, docs/solver-contract.md).
+  The prototype requires actual simplified computation; echoing input is cancelled (ADR-0010).
+  Fix the application contract separately from HCh's unknown internal API and runtime.
+  No solver/adapter implementation, optimizer installation, computation module, Java DTO,
+  PostgreSQL/Kafka integration, UI changes, transfer/mixing implementation or infrastructure.
+  LP, constant H/S/V and Hipparchus remain a candidate; do not choose a version or dependency.
+  Architectural and scientific decisions are discussed with the user in web;
+  local Codex documents agreed decisions and implements specifically assigned tasks.
+  Surface gaps changing domain semantics with options; never invent a scientific model.
+  Routine technical implementation choices remain within the local agent's competence.
+  Preserve model/library versions, immutable run snapshots/results, rights, reproducibility and future CSV.
+  Contract preservation after HCh is a goal, not proven compatibility; version changes explicitly.
+  Never deploy infrastructure, access the VPS or request secrets.
   Temurin 25.0.4.1+1 was explicitly approved instead of 25.0.5+8 (no Windows asset).
-  Do not archive before implementation review; check moved and incoming links at future archive.
+  Do not archive or sync application-scaffold in this task; that is a separate action.
   Work on a separate Git branch and submit a PR, never directly to main.
   Windows 10 development must not require WSL2, Docker or access to the user's VPS.
   HCh/Unitherm interfaces and compatibility are unknown; do not invent them.
@@ -60,7 +67,7 @@ rules:
 operations:
   apply:
     guidance:
-      - Implementation is explicitly authorized for application-scaffold; preserve scope and acceptance criteria.
+      - Current authorization covers contract documents, schemas, examples and validation only; no solver or DTO implementation.
   archive:
     guidance:
       - Never archive or sync an unimplemented proposal into main specs as delivered behavior.

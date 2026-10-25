@@ -1,0 +1,101 @@
+{
+  "contractVersion": "1.0",
+  "calculationId": "calc-structure-mix-001",
+  "status": "CONVERGED",
+  "provenance": {
+    "adapter": {
+      "id": "documentation-example",
+      "version": "1"
+    },
+    "engine": {
+      "id": "no-engine-hand-authored",
+      "version": "1"
+    },
+    "modelKind": "DEMONSTRATION",
+    "chemicalSystemRef": {
+      "id": "demo-gas-structure-system",
+      "versionId": "v1"
+    },
+    "thermodynamicDataRef": {
+      "id": "demo-data",
+      "versionId": "v1"
+    },
+    "appliedModels": [
+      {
+        "id": "demo:mixture-structure",
+        "versionId": "v1"
+      }
+    ],
+    "effectiveSolverOptions": {
+      "maxIterations": 1000,
+      "balanceAbsoluteToleranceMol": 1e-8,
+      "balanceRelativeTolerance": 1e-8
+    }
+  },
+  "conditions": {
+    "temperatureK": 310,
+    "pressurePa": 100000
+  },
+  "solution": {
+    "elementAmountsMol": {
+      "H": 2,
+      "O": 1
+    },
+    "phases": [
+      {
+        "phaseInstanceId": "gas-instance-1",
+        "phaseDefinitionId": "demo:gas-mixture",
+        "phaseType": "GAS",
+        "species": [
+          {
+            "speciesId": "demo:hydrogen-gas",
+            "amountMol": 0.5
+          },
+          {
+            "speciesId": "demo:oxygen-gas",
+            "amountMol": 0.25
+          },
+          {
+            "speciesId": "demo:water-gas",
+            "amountMol": 0.25
+          }
+        ],
+        "elementAmountsMol": {
+          "H": 1.5,
+          "O": 0.75
+        }
+      },
+      {
+        "phaseInstanceId": "gas-instance-2",
+        "phaseDefinitionId": "demo:gas-mixture",
+        "phaseType": "GAS",
+        "species": [
+          {
+            "speciesId": "demo:water-gas",
+            "amountMol": 0.25
+          }
+        ],
+        "elementAmountsMol": {
+          "H": 0.5,
+          "O": 0.25
+        }
+      }
+    ]
+  },
+  "diagnostics": {
+    "messages": [
+      {
+        "code": "demo:HAND_AUTHORED_STRUCTURE",
+        "severity": "INFO",
+        "text": "Многокомпонентная фаза и два экземпляра одного типа: только структура с проверенным балансом, не результат минимизации и не обещание поддержки."
+      }
+    ],
+    "balance": {
+      "passed": true,
+      "absoluteToleranceMol": 1e-8,
+      "relativeTolerance": 1e-8,
+      "maxAbsoluteResidualMol": 0,
+      "unit": "mol"
+    }
+  }
+}

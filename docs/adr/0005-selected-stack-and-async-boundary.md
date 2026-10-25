@@ -20,4 +20,4 @@
 
 ## Что этим решением не принято
 
-Polling, outbox, формат Kafka-сообщений, владение таблицами и JSONB — [ADR-0006](0006-proposed-persistence-and-delivery.md), статус «Предложено». Конкретные версии JDK, Spring Boot и прочие рекомендованные инструменты — [ADR-0008](0008-proposed-tooling-and-environment.md), также «Предложено». Диаграмма переходов, отмена и частичные результаты — `Q-RUN-001` в [открытых вопросах](../open-questions.md).
+Polling, outbox, формат Kafka-сообщений, владение таблицами и JSONB — [ADR-0006](0006-proposed-persistence-and-delivery.md), статус «Предложено». Поднабор и точные версии реализованного каркаса приняты отдельно в [ADR-0009](0009-application-scaffold.md); прочие рекомендации [ADR-0008](0008-proposed-tooling-and-environment.md) остаются предложенными. Диаграмма переходов, отмена и частичные результаты — `Q-RUN-001` в [реестре](../open-questions.md). Научные исходы вызова отделены от этого жизненного цикла в [контракте](../solver-contract.md).

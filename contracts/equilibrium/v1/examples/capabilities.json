@@ -1,0 +1,54 @@
+{
+  "contractVersion": "1.0",
+  "implementation": {
+    "adapter": {
+      "id": "documentation-example",
+      "version": "1"
+    },
+    "engine": {
+      "id": "no-engine-hand-authored",
+      "version": "1"
+    },
+    "modelKind": "DEMONSTRATION"
+  },
+  "supportedContractVersions": [
+    "1.0"
+  ],
+  "supportedModes": [
+    "CLOSED"
+  ],
+  "supportedPhaseModels": [
+    {
+      "id": "demo:pure-phase",
+      "versionId": "v1"
+    }
+  ],
+  "availableProperties": [],
+  "supportedSolverOptions": [
+    {
+      "name": "maxIterations",
+      "valueType": "INTEGER",
+      "unit": "1",
+      "minimum": 1,
+      "default": 1000
+    },
+    {
+      "name": "balanceAbsoluteToleranceMol",
+      "valueType": "NUMBER",
+      "unit": "mol",
+      "default": 1e-8
+    },
+    {
+      "name": "balanceRelativeTolerance",
+      "valueType": "NUMBER",
+      "unit": "1",
+      "minimum": 0,
+      "default": 1e-8
+    }
+  ],
+  "limits": {
+    "maxElements": 2,
+    "maxSpecies": 1,
+    "maxPhases": 1
+  }
+}

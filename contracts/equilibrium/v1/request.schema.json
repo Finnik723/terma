@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:terma:equilibrium:1.0:request",
+  "title": "CalculateEquilibriumRequest 1.0",
+  "type": "object",
+  "properties": {
+    "contractVersion": {
+      "const": "1.0"
+    },
+    "calculationId": {
+      "$ref": "urn:terma:equilibrium:1.0:common#/$defs/identifier"
+    },
+    "conditions": {
+      "$ref": "urn:terma:equilibrium:1.0:common#/$defs/conditions"
+    },
+    "system": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "const": "CLOSED"
+        },
+        "elementAmountsMol": {
+          "$ref": "urn:terma:equilibrium:1.0:common#/$defs/elementAmounts"
+        }
+      },
+      "required": [
+        "mode",
+        "elementAmountsMol"
+      ],
+      "additionalProperties": false
+    },
+    "chemicalSystemRef": {
+      "$ref": "urn:terma:equilibrium:1.0:common#/$defs/versionRef"
+    },
+    "thermodynamicDataRef": {
+      "$ref": "urn:terma:equilibrium:1.0:common#/$defs/versionRef"
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:terma:equilibrium:1.0:common#/$defs/propertyCode"
+      },
+      "minItems": 0,
+      "uniqueItems": true,
+      "default": []
+    },
+    "solverOptions": {
+      "$ref": "urn:terma:equilibrium:1.0:common#/$defs/solverOptions"
+    }
+  },
+  "required": [
+    "contractVersion",
+    "calculationId",
+    "conditions",
+    "system",
+    "chemicalSystemRef",
+    "thermodynamicDataRef",
+    "solverOptions"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,62 @@
+{
+  "contractVersion": "1.0",
+  "ref": {
+    "id": "demo-gas-structure-system",
+    "versionId": "v1"
+  },
+  "label": "Только пример структуры многокомпонентной фазы",
+  "origin": {
+    "kind": "DEMONSTRATION",
+    "description": "Синтетические определения для примера структуры. Параметров научного ядра нет; равновесие не вычислялось."
+  },
+  "elements": [
+    "H",
+    "O"
+  ],
+  "species": [
+    {
+      "speciesId": "demo:hydrogen-gas",
+      "label": "Демонстрационный водород",
+      "formula": "H2",
+      "elementStoichiometry": {
+        "H": 2
+      },
+      "charge": 0
+    },
+    {
+      "speciesId": "demo:oxygen-gas",
+      "label": "Демонстрационный кислород",
+      "formula": "O2",
+      "elementStoichiometry": {
+        "O": 2
+      },
+      "charge": 0
+    },
+    {
+      "speciesId": "demo:water-gas",
+      "label": "Демонстрационная вода в газовой фазе",
+      "formula": "H2O",
+      "elementStoichiometry": {
+        "H": 2,
+        "O": 1
+      },
+      "charge": 0
+    }
+  ],
+  "phases": [
+    {
+      "phaseDefinitionId": "demo:gas-mixture",
+      "label": "Пример определения смеси, не вычислительная поддержка",
+      "phaseType": "GAS",
+      "allowedSpeciesIds": [
+        "demo:hydrogen-gas",
+        "demo:oxygen-gas",
+        "demo:water-gas"
+      ],
+      "modelRef": {
+        "id": "demo:mixture-structure",
+        "versionId": "v1"
+      }
+    }
+  ]
+}
