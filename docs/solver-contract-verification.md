@@ -42,9 +42,9 @@ Set-Location 'C:\Users\79067\source\repos\terma'
 
 ## CI
 
-В [ci.yml](../.github/workflows/ci.yml) обе матричные проверки Build and unit (ubuntu-24.04 / windows-2022) устанавливают закреплённые зависимости и запускают **тот же** `python tools/check_solver_contract.py`. [Официальный setup-python v7.1.0](https://github.com/actions/setup-python/releases/tag/v7.1.0) закреплён на проверенный SHA `6d4fd22b20465ccc0f7354476588e8df7c9ca0e0`, Python — 3.12.14. Обязательные ошибки шага делают job неуспешным; continue-on-error нет.
+В [ci.yml](../.github/workflows/ci.yml) обе матричные проверки Build and unit (ubuntu-24.04 / windows-2022) устанавливают закреплённые зависимости и запускают **тот же** `python tools/check_solver_contract.py`. [Официальный setup-python v7.1.0](https://github.com/actions/setup-python/releases/tag/v7.1.0) закреплён на SHA `6d4fd22b20465ccc0f7354476588e8df7c9ca0e0`; для обеих CI-сред выбран Python **3.12.10** с проверенными Windows x64 и Ubuntu 24.04 сборками в [официальном manifest](https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json). Локально проверен Python 3.12.14. Обязательные ошибки шага делают job неуспешным; continue-on-error нет.
 
-Фактический результат CI нового коммита будет указан после его завершения; прежний зелёный CI без нового шага не считается проверкой схем.
+В [первом прогоне исправлений](https://github.com/Finnik723/terma/actions/runs/40237598959) Linux выполнил новый сценарий успешно. Windows остановился на setup-python: 3.12.14 не имел доступной Windows-сборки, поэтому тесты там не выполнялись, а зависимый process/HTTP job был пропущен. Это не успех проверки Windows. Версия CI исправлена на проверенную в manifest 3.12.10; результат повторного прогона будет записан после завершения.
 
 Локальные ссылки проверены как штатным средством проекта, так и отдельным обходом Markdown в `docs`, `openspec`, `contracts`, README и AGENTS. Проверка идентификаторов сравнивает foundation с исходным main; 17 отметок application-scaffold и его требования/приёмка сохраняются. Финальная проверка diff исключает код/зависимости приложения.
 
