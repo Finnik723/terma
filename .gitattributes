@@ -1,0 +1,17 @@
+# Keep text consistent across Windows and Linux checkouts.
+* text=auto eol=lf
+
+# Windows command scripts require their own line-ending policy.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Common binary assets must not undergo text conversion.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.jar binary
