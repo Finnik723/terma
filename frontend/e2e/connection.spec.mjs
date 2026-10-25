@@ -1,10 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { startJar, stop, waitForBackend } from '../../tools/runtime.mjs';
+import { e2eSettings } from './settings.ts';
 
 test('built frontend receives real backend UP and reports failure after backend stops', async ({ page }) => {
-  const backend = startJar('backend/target/terma-backend.jar', ['--server.port=8080']);
+  const backend = startJar('backend/target/terma-backend.jar', [
+    `--server.port=${e2eSettings.backendPort}`,
+    `--server.address=${e2eSettings.host}`,
+  ]);
   try {
-    await waitForBackend('http://127.0.0.1:8080', backend);
+    await waitForBackend(e2eSettings.backendURL, backend);
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Технический каркас' })).toBeVisible();
     await page.getByRole('button', { name: 'Проверить связь' }).click();

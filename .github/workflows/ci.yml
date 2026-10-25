@@ -82,5 +82,18 @@ jobs:
       - name: Real browser HTTP (no positive-response mock)
         working-directory: frontend
         run: npm run test:e2e
+      - name: E2E isolation from developer environment and local env file
+        working-directory: frontend
+        env:
+          TERMA_FRONTEND_PORT: '5199'
+          TERMA_BACKEND_URL: http://127.0.0.1:8081
+          SERVER_PORT: '8081'
+          SERVER_ADDRESS: '::1'
+        run: |
+          # This is an isolated CI checkout; never overwrite a developer's local file.
+          test ! -e .env.local
+          trap 'rm -f .env.local' EXIT
+          printf 'TERMA_FRONTEND_PORT=5198\nTERMA_BACKEND_URL=http://127.0.0.1:8082\n' > .env.local
+          npm run test:e2e
       - name: Infrastructure verification scope
         run: echo "PostgreSQL/Kafka availability and integrations are NOT_CONFIGURED / NOT_RUN."
