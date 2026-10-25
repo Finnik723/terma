@@ -4,7 +4,7 @@
 
 Определяет наблюдаемые гарантии сборки технического каркаса и его расширяемые границы, чтобы разработчик мог получать проверяемые артефакты без пользовательского VPS.
 
-Статус: предложенные требования изменения `application-scaffold`, пока не реализованы. Основания: `REQ-ARCH-001`, `REQ-ARCH-002`, `REQ-TECH-001`, `REQ-TECH-002`, `REQ-ENV-001`, `REQ-ENV-003` из [основы проекта](../../../../../docs/project-foundation.md), [ADR-0001](../../../../../docs/adr/0001-monorepo-and-boundaries.md), [ADR-0005](../../../../../docs/adr/0005-selected-stack-and-async-boundary.md) и предложенный [ADR-0008](../../../../../docs/adr/0008-proposed-tooling-and-environment.md).
+Статус: согласованные требования application-scaffold; фактическое выполнение отражено в tasks и отчёте проверки. Основания: `REQ-ARCH-001`, `REQ-ARCH-002`, `REQ-TECH-001`, `REQ-TECH-002`, `REQ-ENV-001`, `REQ-ENV-003` из [основы проекта](../../../../../docs/project-foundation.md), [ADR-0001](../../../../../docs/adr/0001-monorepo-and-boundaries.md), [ADR-0005](../../../../../docs/adr/0005-selected-stack-and-async-boundary.md) и предложенный [ADR-0008](../../../../../docs/adr/0008-proposed-tooling-and-environment.md).
 
 ## ADDED Requirements
 

@@ -33,11 +33,11 @@ OpenSpec 1.15.0 инициализирован для Codex. Контекст и
 
 Первый этап завершён. Его ограничения сохранены здесь как история; последующее поручение пользователя разрешило OpenSpec и подготовку первого изменения (`REQ-STAGE-002`). Действующий объём определяется следующим разделом.
 
-## Текущий этап: OpenSpec и подготовка первого изменения
+## Подготовка первого изменения (история)
 
 Фактически выполнена установка только OpenSpec 1.15.0 и штатная инициализация для Codex. Существующий AGENTS.md сохранён генератором. Созданы шесть skills в `.agents/skills/`, проектная конфигурация и изменение `application-scaffold`. Подробности инструмента и официальные источники — в [технологической основе](technology-baseline.md).
 
-Артефакты для просмотра: [proposal](../openspec/changes/application-scaffold/proposal.md), три delta specs — [сборка](../openspec/changes/application-scaffold/specs/development-build/spec.md), [процессы/HTTP](../openspec/changes/application-scaffold/specs/technical-runtime/spec.md), [окружение/проверки](../openspec/changes/application-scaffold/specs/environment-verification/spec.md), [design](../openspec/changes/application-scaffold/design.md), [tasks](../openspec/changes/application-scaffold/tasks.md). Все задачи реализации открыты; заполнение артефактов не является реализацией.
+Были подготовлены [proposal](../openspec/changes/application-scaffold/proposal.md), три delta specs — [сборка](../openspec/changes/application-scaffold/specs/development-build/spec.md), [процессы/HTTP](../openspec/changes/application-scaffold/specs/technical-runtime/spec.md), [окружение/проверки](../openspec/changes/application-scaffold/specs/environment-verification/spec.md), [design](../openspec/changes/application-scaffold/design.md), [tasks](../openspec/changes/application-scaffold/tasks.md). PR №1 прошёл ревью и объединён пользователем.
 
 Проверенные штатные команды для Windows из корня проекта:
 
@@ -47,7 +47,15 @@ openspec.cmd status --change application-scaffold
 openspec.cmd validate application-scaffold --strict --no-interactive
 ```
 
-В Codex используется сгенерированный skill `openspec-propose`. Для реализации нужен новый явный запрос пользователя после просмотра; apply сейчас не запускается. Значение `isPlanningComplete`/готовность всех артефактов в status означает только комплектность планирования; фактический прогресс реализации определяется unchecked задачами. Незавершённое изменение не архивируется, delta specs не синхронизируются в основной каталог.
+Подготовка выполнялась через `openspec-propose`. Затем пользователь явно разрешил реализацию. Значение `isPlanningComplete`/готовность артефактов означает только комплектность планирования, а не успешное выполнение задач.
+
+## Текущий этап: реализация application-scaffold
+
+Используется штатный `openspec-apply-change`: читать `instructions apply`, выполнять согласованные задачи, отмечать их только после реализации и проверки и повторно проверять прогресс. Разрешены необходимые зависимости, локальные/CI-проверки, commit/push отдельной ветки и PR. Согласованы дизайн и необходимый набор технологий каркаса, а не все предложенные ADR. Замена Temurin на 25.0.4.1+1 отдельно согласована из-за отсутствия Windows-дистрибутива 25.0.5+8.
+
+Сохраняются исключения объёма из proposal. Запрещены VPS, доменные/научные функции и интеграции PostgreSQL/Kafka. Существенные замены технологий и критериев сначала согласуются; обычные исправления выполняются в рамках дизайна. Недоступная проверка явно остаётся невыполненной. Команды запуска — [development.md](development.md), результаты — [verification.md](verification.md).
+
+До ревью реализации не выполнять archive/sync в основной каталог спецификаций и не делать merge PR самостоятельно. При последующем архивировании проверить как внутренние относительные ссылки перенесённых proposal/design/tasks/specs, так и ссылки на них из README, AGENTS.md и docs; одной проверки наличия архивной папки недостаточно.
 
 ### Где определён объём первого изменения
 
