@@ -4,14 +4,17 @@ context: |
   Language: Russian
   All artifacts must be written in Russian.
   Keep OpenSpec structural headings and SHALL/MUST keywords in English.
-  Greenfield thermodynamic modelling project; no application exists yet.
+  Thermodynamic modelling project; application-scaffold implementation is now authorized.
   Read AGENTS.md and docs/project-foundation.md for REQ-*, SCN-* and PROP-*.
   Use docs/domain-glossary.md, docs/architecture.md, docs/adr/README.md,
   docs/open-questions.md and docs/development-workflow.md; link rather than duplicate.
   Preserve traceability to source IDs and ADR; proposals are not accepted decisions.
-  Current authorization is OpenSpec setup and application-scaffold planning for review only.
-  Do not implement code, install application dependencies, deploy infrastructure,
-  access the VPS, request secrets, apply tasks or archive this unimplemented change.
+  The user approved application-scaffold design and its required technology subset.
+  Implement its tasks, install required dependencies and run local/CI checks.
+  Do not add domain features, scientific contracts/stub, jobs, database/broker integration,
+  outbox, series, transfer or CSV. Never deploy infrastructure, access the VPS or request secrets.
+  Temurin 25.0.4.1+1 was explicitly approved instead of 25.0.5+8 (no Windows asset).
+  Do not archive before implementation review; check moved and incoming links at future archive.
   Work on a separate Git branch and submit a PR, never directly to main.
   Windows 10 development must not require WSL2, Docker or access to the user's VPS.
   HCh/Unitherm interfaces and compatibility are unknown; do not invent them.
@@ -48,12 +51,12 @@ rules:
     - Link docs/technology-baseline.md for exact versions and official evidence instead of duplicating the table.
     - Separate Windows checks without Docker, Linux CI and future PostgreSQL/Kafka integration checks.
   tasks:
-    - Keep implementation tasks unchecked; each must state an observable result and verification method.
+    - Mark tasks complete only after implementation and their specified checks; record unavailable checks honestly.
 
 operations:
   apply:
     guidance:
-      - Start only after a new explicit user request authorizes implementation of the reviewed change.
+      - Implementation is explicitly authorized for application-scaffold; preserve scope and acceptance criteria.
   archive:
     guidance:
       - Never archive or sync an unimplemented proposal into main specs as delivered behavior.

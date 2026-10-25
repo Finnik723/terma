@@ -1,0 +1,99 @@
+name: Scaffold checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-unit:
+    name: Build and unit (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+          cache: maven
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: JVM build and unit tests (Windows)
+        if: runner.os == 'Windows'
+        run: .\mvnw.cmd --batch-mode --no-transfer-progress verify
+      - name: JVM build and unit tests (Linux)
+        if: runner.os == 'Linux'
+        run: ./mvnw --batch-mode --no-transfer-progress verify
+      - name: Frontend install, build and component tests
+        working-directory: frontend
+        run: |
+          npm ci --no-fund
+          npm run build
+          npm test
+      - name: Configuration and negative HTTP checks
+        run: node --test tools/runtime.test.mjs tools/frontend-config.test.mjs
+      - name: Documentation links
+        run: node tools/check-doc-links.mjs
+      - name: OpenSpec strict validation
+        run: npx --yes --package @fission-ai/openspec@1.15.0 openspec validate --all --strict --no-interactive
+
+  process-http:
+    name: Linux processes and real frontend/backend HTTP
+    needs: build-unit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+          cache: maven
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Package the independent processes
+        run: ./mvnw --batch-mode --no-transfer-progress -DskipTests package
+      - name: Process bootstrap, liveness and negative startup checks
+        run: node tools/process-smoke.mjs
+      - name: Build frontend and install Chromium
+        working-directory: frontend
+        run: |
+          npm ci --no-fund
+          npm run build
+          npx --no-install playwright install --with-deps chromium
+      - name: Real browser HTTP (no positive-response mock)
+        working-directory: frontend
+        run: npm run test:e2e
+      - name: E2E isolation from developer environment and local env file
+        working-directory: frontend
+        env:
+          TERMA_FRONTEND_PORT: '5199'
+          TERMA_BACKEND_URL: http://127.0.0.1:8081
+          SERVER_PORT: '8081'
+          SERVER_ADDRESS: '::1'
+        run: |
+          # This is an isolated CI checkout; never overwrite a developer's local file.
+          test ! -e .env.local
+          trap 'rm -f .env.local' EXIT
+          printf 'TERMA_FRONTEND_PORT=5198\nTERMA_BACKEND_URL=http://127.0.0.1:8082\n' > .env.local
+          npm run test:e2e
+      - name: Infrastructure verification scope
+        run: echo "PostgreSQL/Kafka availability and integrations are NOT_CONFIGURED / NOT_RUN."
