@@ -4,7 +4,7 @@
 
 ## Точные версии и источники
 
-| Инструмент | Предложенная версия | Основание и бесплатное использование |
+| Инструмент | Закреплённая версия каркаса | Основание и бесплатное использование |
 | --- | --- | --- |
 | Eclipse Temurin JDK | **25.0.4.1+1**, Java 25 LTS, без preview | [Стабильный релиз с Windows x64](https://github.com/adoptium/temurin25-binaries/releases/tag/jdk-25.0.4.1%2B1), [LTS](https://adoptium.net/support); [бесплатные бинарные сборки, GPLv2 с Classpath Exception](https://adoptium.net/docs/faq). Замена отдельно согласована: у 25.0.5+8 Windows-файлы отсутствуют |
 | Spring Boot | **4.1.2** | [Релиз](https://github.com/spring-projects/spring-boot/releases/tag/v4.1.2), [требования](https://docs.spring.io/spring-boot/system-requirements.html): Java 17–27, Maven от 3.6.3; Java 25 подходит. [Apache-2.0](https://github.com/spring-projects/spring-boot/blob/v4.1.2/LICENSE.txt) |
