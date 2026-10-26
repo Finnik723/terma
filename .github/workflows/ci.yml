@@ -47,6 +47,15 @@ jobs:
         run: node --test tools/runtime.test.mjs tools/frontend-config.test.mjs
       - name: Documentation links
         run: node tools/check-doc-links.mjs
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12.10'
+          cache: pip
+          cache-dependency-path: tools/requirements-contracts.txt
+      - name: Install pinned contract validation tools
+        run: python -m pip install --disable-pip-version-check -r tools/requirements-contracts.txt
+      - name: Solver contract schemas, fixtures and semantic checks (no solver)
+        run: python tools/check_solver_contract.py
       - name: OpenSpec strict validation
         run: npx --yes --package @fission-ai/openspec@1.15.0 openspec validate --all --strict --no-interactive
 

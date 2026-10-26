@@ -1,0 +1,78 @@
+{
+  "contractVersion": "1.0",
+  "calculationId": "calc-001",
+  "status": "CONVERGED",
+  "provenance": {
+    "adapter": {
+      "id": "documentation-example",
+      "version": "1"
+    },
+    "engine": {
+      "id": "no-engine-hand-authored",
+      "version": "1"
+    },
+    "modelKind": "DEMONSTRATION",
+    "chemicalSystemRef": {
+      "id": "demo-water-system",
+      "versionId": "v1"
+    },
+    "thermodynamicDataRef": {
+      "id": "demo-data",
+      "versionId": "v1"
+    },
+    "appliedModels": [
+      {
+        "id": "demo:pure-phase",
+        "versionId": "v1"
+      }
+    ],
+    "effectiveSolverOptions": {
+      "maxIterations": 1000,
+      "balanceAbsoluteToleranceMol": 1e-8,
+      "balanceRelativeTolerance": 1e-8
+    }
+  },
+  "conditions": {
+    "temperatureK": 310,
+    "pressurePa": 100000
+  },
+  "solution": {
+    "elementAmountsMol": {
+      "H": 2,
+      "O": 1
+    },
+    "phases": [
+      {
+        "phaseInstanceId": "phase-001",
+        "phaseDefinitionId": "demo:pure-water",
+        "phaseType": "LIQUID",
+        "species": [
+          {
+            "speciesId": "demo:water-liquid",
+            "amountMol": 1
+          }
+        ],
+        "elementAmountsMol": {
+          "H": 2,
+          "O": 1
+        }
+      }
+    ]
+  },
+  "diagnostics": {
+    "messages": [
+      {
+        "code": "demo:HAND_AUTHORED_STRUCTURE",
+        "severity": "INFO",
+        "text": "Синтетический пример успешного конверта, составлен вручную; движок не запускался, минимум не проверен."
+      }
+    ],
+    "balance": {
+      "passed": true,
+      "absoluteToleranceMol": 1e-8,
+      "relativeTolerance": 1e-8,
+      "maxAbsoluteResidualMol": 0,
+      "unit": "mol"
+    }
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:terma:equilibrium:1.0:chemical-system",
+  "title": "Определение версии химической системы Terma 1.0",
+  "type": "object",
+  "properties": {
+    "contractVersion": {
+      "const": "1.0"
+    },
+    "ref": {
+      "$ref": "urn:terma:equilibrium:1.0:common#/$defs/versionRef"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "origin": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "DEMONSTRATION",
+            "SCIENTIFIC_MODEL"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "elements": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][a-z]?$"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "species": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "speciesId": {
+            "$ref": "urn:terma:equilibrium:1.0:common#/$defs/identifier"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "formula": {
+            "type": "string",
+            "minLength": 1
+          },
+          "elementStoichiometry": {
+            "$ref": "urn:terma:equilibrium:1.0:common#/$defs/stoichiometry"
+          },
+          "charge": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "speciesId",
+          "label",
+          "elementStoichiometry",
+          "charge"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "phases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "phaseDefinitionId": {
+            "$ref": "urn:terma:equilibrium:1.0:common#/$defs/identifier"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "phaseType": {
+            "$ref": "urn:terma:equilibrium:1.0:common#/$defs/phaseType"
+          },
+          "allowedSpeciesIds": {
+            "type": "array",
+            "items": {
+              "$ref": "urn:terma:equilibrium:1.0:common#/$defs/identifier"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "modelRef": {
+            "$ref": "urn:terma:equilibrium:1.0:common#/$defs/versionRef"
+          }
+        },
+        "required": [
+          "phaseDefinitionId",
+          "label",
+          "phaseType",
+          "allowedSpeciesIds",
+          "modelRef"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "contractVersion",
+    "ref",
+    "label",
+    "origin",
+    "elements",
+    "species",
+    "phases"
+  ],
+  "additionalProperties": false
+}

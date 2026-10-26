@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:terma:equilibrium:1.0:capabilities",
+  "title": "EquilibriumEngine capabilities 1.0",
+  "type": "object",
+  "properties": {
+    "contractVersion": {
+      "const": "1.0"
+    },
+    "implementation": {
+      "type": "object",
+      "properties": {
+        "adapter": {
+          "$ref": "urn:terma:equilibrium:1.0:common#/$defs/implementationRef"
+        },
+        "engine": {
+          "$ref": "urn:terma:equilibrium:1.0:common#/$defs/implementationRef"
+        },
+        "modelKind": {
+          "enum": [
+            "DEMONSTRATION",
+            "SCIENTIFIC_MODEL"
+          ]
+        }
+      },
+      "required": [
+        "adapter",
+        "engine",
+        "modelKind"
+      ],
+      "additionalProperties": false
+    },
+    "supportedContractVersions": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:terma:equilibrium:1.0:common#/$defs/contractVersionIdentifier"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "supportedModes": {
+      "type": "array",
+      "items": {
+        "const": "CLOSED"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "supportedPhaseModels": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:terma:equilibrium:1.0:common#/$defs/versionRef"
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "availableProperties": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:terma:equilibrium:1.0:common#/$defs/propertyDescriptor"
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "supportedSolverOptions": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:terma:equilibrium:1.0:common#/$defs/solverOptionDescriptor"
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "maxElements": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxSpecies": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxPhases": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "conditions": {
+          "type": "object",
+          "properties": {
+            "minTemperatureK": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "maxTemperatureK": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "minPressurePa": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "maxPressurePa": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "contractVersion",
+    "implementation",
+    "supportedContractVersions",
+    "supportedModes",
+    "supportedPhaseModels",
+    "availableProperties",
+    "supportedSolverOptions"
+  ],
+  "additionalProperties": false
+}

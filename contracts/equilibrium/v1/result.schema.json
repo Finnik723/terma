@@ -1,0 +1,420 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:terma:equilibrium:1.0:result",
+  "title": "CalculateEquilibriumResult 1.0",
+  "type": "object",
+  "properties": {
+    "contractVersion": {
+      "const": "1.0"
+    },
+    "calculationId": {
+      "$ref": "urn:terma:equilibrium:1.0:common#/$defs/identifier"
+    },
+    "status": {
+      "enum": [
+        "CONVERGED",
+        "INVALID_INPUT",
+        "UNSUPPORTED",
+        "INFEASIBLE",
+        "ITERATION_LIMIT",
+        "NUMERICAL_FAILURE"
+      ]
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "adapter": {
+          "$ref": "urn:terma:equilibrium:1.0:common#/$defs/implementationRef"
+        },
+        "engine": {
+          "anyOf": [
+            {
+              "$ref": "urn:terma:equilibrium:1.0:common#/$defs/implementationRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "modelKind": {
+          "enum": [
+            "DEMONSTRATION",
+            "SCIENTIFIC_MODEL"
+          ]
+        },
+        "chemicalSystemRef": {
+          "anyOf": [
+            {
+              "$ref": "urn:terma:equilibrium:1.0:common#/$defs/versionRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "thermodynamicDataRef": {
+          "anyOf": [
+            {
+              "$ref": "urn:terma:equilibrium:1.0:common#/$defs/versionRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "appliedModels": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:terma:equilibrium:1.0:common#/$defs/versionRef"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "effectiveSolverOptions": {
+          "$ref": "urn:terma:equilibrium:1.0:common#/$defs/solverOptions"
+        }
+      },
+      "required": [
+        "adapter",
+        "engine",
+        "modelKind",
+        "chemicalSystemRef",
+        "thermodynamicDataRef",
+        "appliedModels",
+        "effectiveSolverOptions"
+      ],
+      "additionalProperties": false
+    },
+    "conditions": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "temperatureK": {
+              "type": "number"
+            },
+            "pressurePa": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "temperatureK",
+            "pressurePa"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "solution": {
+      "type": "object",
+      "properties": {
+        "elementAmountsMol": {
+          "$ref": "urn:terma:equilibrium:1.0:common#/$defs/elementAmounts"
+        },
+        "phases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "phaseInstanceId": {
+                "$ref": "urn:terma:equilibrium:1.0:common#/$defs/identifier"
+              },
+              "phaseDefinitionId": {
+                "$ref": "urn:terma:equilibrium:1.0:common#/$defs/identifier"
+              },
+              "phaseType": {
+                "$ref": "urn:terma:equilibrium:1.0:common#/$defs/phaseType"
+              },
+              "species": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "speciesId": {
+                      "$ref": "urn:terma:equilibrium:1.0:common#/$defs/identifier"
+                    },
+                    "amountMol": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    "properties": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "urn:terma:equilibrium:1.0:common#/$defs/property"
+                      },
+                      "minItems": 0
+                    }
+                  },
+                  "required": [
+                    "speciesId",
+                    "amountMol"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1
+              },
+              "elementAmountsMol": {
+                "$ref": "urn:terma:equilibrium:1.0:common#/$defs/elementAmounts"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "$ref": "urn:terma:equilibrium:1.0:common#/$defs/property"
+                },
+                "minItems": 0
+              }
+            },
+            "required": [
+              "phaseInstanceId",
+              "phaseDefinitionId",
+              "phaseType",
+              "species",
+              "elementAmountsMol"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:terma:equilibrium:1.0:common#/$defs/property"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "elementAmountsMol",
+        "phases"
+      ],
+      "additionalProperties": false
+    },
+    "diagnostics": {
+      "type": "object",
+      "properties": {
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1
+              },
+              "severity": {
+                "enum": [
+                  "INFO",
+                  "WARNING",
+                  "ERROR"
+                ]
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^(?:/(?:[^~/]|~0|~1)*)*$"
+              }
+            },
+            "required": [
+              "code",
+              "severity",
+              "text"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": "number"
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "code",
+              "value",
+              "unit"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0
+        },
+        "balance": {
+          "type": "object",
+          "properties": {
+            "passed": {
+              "type": "boolean"
+            },
+            "absoluteToleranceMol": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "relativeTolerance": {
+              "type": "number",
+              "minimum": 0
+            },
+            "maxAbsoluteResidualMol": {
+              "type": "number",
+              "minimum": 0
+            },
+            "unit": {
+              "const": "mol"
+            }
+          },
+          "required": [
+            "passed",
+            "absoluteToleranceMol",
+            "relativeTolerance",
+            "maxAbsoluteResidualMol",
+            "unit"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "messages"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "contractVersion",
+    "calculationId",
+    "status",
+    "provenance",
+    "conditions",
+    "diagnostics"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "CONVERGED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "solution"
+        ],
+        "properties": {
+          "conditions": {
+            "$ref": "urn:terma:equilibrium:1.0:common#/$defs/conditions"
+          },
+          "provenance": {
+            "properties": {
+              "engine": {
+                "$ref": "urn:terma:equilibrium:1.0:common#/$defs/implementationRef"
+              },
+              "chemicalSystemRef": {
+                "$ref": "urn:terma:equilibrium:1.0:common#/$defs/versionRef"
+              },
+              "thermodynamicDataRef": {
+                "$ref": "urn:terma:equilibrium:1.0:common#/$defs/versionRef"
+              },
+              "effectiveSolverOptions": {
+                "required": [
+                  "balanceAbsoluteToleranceMol",
+                  "balanceRelativeTolerance"
+                ]
+              }
+            }
+          },
+          "diagnostics": {
+            "required": [
+              "balance"
+            ],
+            "properties": {
+              "balance": {
+                "properties": {
+                  "passed": {
+                    "const": true
+                  }
+                }
+              },
+              "messages": {
+                "items": {
+                  "properties": {
+                    "severity": {
+                      "enum": [
+                        "INFO",
+                        "WARNING"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "not": {
+          "required": [
+            "solution"
+          ]
+        },
+        "properties": {
+          "diagnostics": {
+            "properties": {
+              "messages": {
+                "contains": {
+                  "properties": {
+                    "severity": {
+                      "const": "ERROR"
+                    }
+                  },
+                  "required": [
+                    "severity"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "not": {
+              "const": "INVALID_INPUT"
+            }
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "conditions": {
+            "$ref": "urn:terma:equilibrium:1.0:common#/$defs/conditions"
+          }
+        }
+      }
+    }
+  ]
+}

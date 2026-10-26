@@ -1,0 +1,42 @@
+{
+  "contractVersion": "1.0",
+  "ref": {
+    "id": "demo-water-system",
+    "versionId": "v1"
+  },
+  "label": "Синтетическая система с одной чистой фазой",
+  "origin": {
+    "kind": "DEMONSTRATION",
+    "description": "Синтетические определения для примера структуры. Параметров научного ядра нет; равновесие не вычислялось."
+  },
+  "elements": [
+    "H",
+    "O"
+  ],
+  "species": [
+    {
+      "speciesId": "demo:water-liquid",
+      "label": "Вода: синтетический идентификатор жидкой формы",
+      "formula": "H2O",
+      "elementStoichiometry": {
+        "H": 2,
+        "O": 1
+      },
+      "charge": 0
+    }
+  ],
+  "phases": [
+    {
+      "phaseDefinitionId": "demo:pure-water",
+      "label": "Пример чистой жидкой фазы",
+      "phaseType": "LIQUID",
+      "allowedSpeciesIds": [
+        "demo:water-liquid"
+      ],
+      "modelRef": {
+        "id": "demo:pure-phase",
+        "versionId": "v1"
+      }
+    }
+  ]
+}

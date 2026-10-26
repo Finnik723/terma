@@ -1,0 +1,112 @@
+{
+  "contractVersion": "1.0",
+  "calculationId": "calc-properties-001",
+  "status": "CONVERGED",
+  "provenance": {
+    "adapter": {
+      "id": "documentation-example",
+      "version": "1"
+    },
+    "engine": {
+      "id": "no-engine-hand-authored",
+      "version": "1"
+    },
+    "modelKind": "DEMONSTRATION",
+    "chemicalSystemRef": {
+      "id": "demo-water-system",
+      "versionId": "v1"
+    },
+    "thermodynamicDataRef": {
+      "id": "demo-data",
+      "versionId": "v1"
+    },
+    "appliedModels": [
+      {
+        "id": "demo:pure-phase",
+        "versionId": "v1"
+      }
+    ],
+    "effectiveSolverOptions": {
+      "maxIterations": 1000,
+      "balanceAbsoluteToleranceMol": 1e-08,
+      "balanceRelativeTolerance": 1e-08
+    }
+  },
+  "conditions": {
+    "temperatureK": 310,
+    "pressurePa": 100000
+  },
+  "solution": {
+    "elementAmountsMol": {
+      "H": 2,
+      "O": 1
+    },
+    "phases": [
+      {
+        "phaseInstanceId": "phase-001",
+        "phaseDefinitionId": "demo:pure-water",
+        "phaseType": "LIQUID",
+        "species": [
+          {
+            "speciesId": "demo:water-liquid",
+            "amountMol": 1,
+            "properties": [
+              {
+                "code": "ACTIVITY",
+                "value": 1,
+                "unit": "1"
+              },
+              {
+                "code": "ACTIVITY_COEFFICIENT",
+                "value": 1,
+                "unit": "1"
+              },
+              {
+                "code": "CHEMICAL_POTENTIAL",
+                "value": -1,
+                "unit": "J/mol",
+                "referenceConvention": "demo:synthetic-zero-v1"
+              }
+            ]
+          }
+        ],
+        "elementAmountsMol": {
+          "H": 2,
+          "O": 1
+        },
+        "properties": [
+          {
+            "code": "GIBBS_ENERGY",
+            "value": -1,
+            "unit": "J",
+            "referenceConvention": "demo:synthetic-zero-v1"
+          }
+        ]
+      }
+    ],
+    "properties": [
+      {
+        "code": "GIBBS_ENERGY",
+        "value": -1,
+        "unit": "J",
+        "referenceConvention": "demo:synthetic-zero-v1"
+      }
+    ]
+  },
+  "diagnostics": {
+    "messages": [
+      {
+        "code": "demo:HAND_AUTHORED_STRUCTURE",
+        "severity": "INFO",
+        "text": "Вручную составленный синтетический пример свойств SYSTEM/PHASE/SPECIES. Значения иллюстрируют только форму, не получены научным расчётом."
+      }
+    ],
+    "balance": {
+      "passed": true,
+      "absoluteToleranceMol": 1e-08,
+      "relativeTolerance": 1e-08,
+      "maxAbsoluteResidualMol": 0,
+      "unit": "mol"
+    }
+  }
+}
