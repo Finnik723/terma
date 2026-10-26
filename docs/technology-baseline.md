@@ -36,11 +36,11 @@
 
 Для Linux CI выбран поддерживаемый стабильный PostgreSQL **18.6** ([официальная политика версий](https://www.postgresql.org/support/versioning/)). Официальный `postgres:18.6` закреплён digest `sha256:edb0c08dc33befd0262ab3b5cf1c4f3f8cfd8b09e88c05b45adee29d6761ddb6`, проверенным 26 октября 2026 года через Docker Registry API. Это изолированная CI-БД с временными учебными credentials, без пользовательского VPS или обязательного Docker на Windows.
 
-Backend: Spring Boot MVC, Actuator и тестовые средства. Worker: Spring Boot non-web bootstrap и тестовые средства, без web-сервера и потребителей Kafka. JUnit согласуется через BOM Spring Boot. Конкретные starter-артефакты сверяются с Boot 4.1.2 при реализации.
+Backend: Spring Boot MVC, Actuator и тестовые средства. Worker: Spring Boot non-web bootstrap и тестовые средства, без web-сервера и потребителей Kafka. Оба подключают общий модуль JDBC/Liquibase `storage`; JUnit и зависимости согласуются через BOM Spring Boot.
 
 Frontend: React/React DOM, TypeScript, Vite/react plugin и типы; Vitest/RTL/jsdom для компонентных проверок; Playwright для небольшой браузерной проверки настоящей HTTP-связи в Linux CI. Минимальный экран — обычный CSS и native fetch.
 
-**Отложены:** Hibernate/JPA, Liquibase, PostgreSQL JDBC, Spring Kafka, Spring Security, Ant Design, React Router, TanStack Query, Apache ECharts, генерация OpenAPI, Testcontainers и Docker Compose-конфигурация. Это не отказ от выбранных технологий: для технического каркаса без доменных данных, прав и интеграций они пока не нужны. При добавлении Hibernate и связанных зависимостей применяется [BOM Spring Boot](https://docs.spring.io/spring-boot/appendix/dependency-versions/coordinates.html), без независимого закрепления несовместимых версий.
+**Отложены:** Hibernate/JPA, Spring Kafka, Spring Security, Ant Design, React Router, TanStack Query, Apache ECharts, генерация OpenAPI, Testcontainers и Docker Compose-конфигурация. Liquibase и PostgreSQL JDBC добавлены в №6. Остальные инструменты подключаются по необходимости соответствующих задач. При добавлении Hibernate и связанных зависимостей применяется [BOM Spring Boot](https://docs.spring.io/spring-boot/appendix/dependency-versions/coordinates.html), без независимого закрепления несовместимых версий.
 
 ## Уточнения рекомендаций и среды
 

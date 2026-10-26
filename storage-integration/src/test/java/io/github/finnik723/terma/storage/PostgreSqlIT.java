@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class PostgreSqlIT {
     private final Path root = Path.of(System.getProperty("terma.root"));
     private final ArrayList<Running> children = new ArrayList<>();
+    private final ArrayList<Path> temporaryChangelogs = new ArrayList<>();
     private String baseUrl;
     private String username;
     private String password;
@@ -55,6 +56,7 @@ class PostgreSqlIT {
         try {
             for (var child : children) child.close();
         } finally {
+            for (var changelog : temporaryChangelogs) Files.deleteIfExists(changelog);
             if (schema != null && schema.matches("terma_it_[a-f0-9]{32}")) {
                 try (var connection = DriverManager.getConnection(baseUrl, username, password); var sql = connection.createStatement()) {
                     sql.execute("DROP SCHEMA " + schema + " CASCADE");
@@ -90,6 +92,13 @@ class PostgreSqlIT {
 
     private void worker() throws Exception {
         try (var child = launch("worker", Map.of())) { child.ready(); }
+    }
+
+    private Map<String, String> pendingMigration() throws Exception {
+        Path changelog = Files.createTempFile(root.resolve("storage-integration/target"), "pending-migration-", ".sql");
+        Files.writeString(changelog, "--liquibase formatted sql\n--changeset integration:pending\nSELECT 2;\n");
+        temporaryChangelogs.add(changelog);
+        return Map.of("SPRING_LIQUIBASE_CHANGE_LOG", changelog.toUri().toString());
     }
 
     @Test void bothApplicationsMigrateOnceAndPreserveCommittedDataOnRestart() throws Exception {
@@ -161,8 +170,10 @@ class PostgreSqlIT {
     @Test void connectionLossDuringStartupIsNotReportedAsSuccess() throws Exception {
         worker();
         sql("UPDATE databasechangeloglock SET locked=true, lockedby='integration-test'");
+        // Liquibase intentionally bypasses the lock when no changes are pending.
+        var pending = pendingMigration();
         for (String module : new String[]{"backend", "worker"}) {
-            try (var child = launch(module, Map.of())) {
+            try (var child = launch(module, pending)) {
                 long end = System.nanoTime() + Duration.ofSeconds(30).toNanos();
                 while (!child.logs().contains("Waiting for changelog lock") && child.process.isAlive() && System.nanoTime() < end) Thread.sleep(100);
                 assertTrue(child.logs().contains("Waiting for changelog lock"), child.safeLogs());
@@ -175,10 +186,12 @@ class PostgreSqlIT {
     @Test void persistentLiquibaseLockFailsWithinBoundWithoutClearingTheOwner() throws Exception {
         worker();
         sql("UPDATE databasechangeloglock SET locked=true, lockedby='integration-test'");
+        var pending = pendingMigration();
         for (String module : new String[]{"backend", "worker"}) {
-            try (var child = launch(module, Map.of())) { child.failed(120, "Could not acquire change log lock"); }
+            try (var child = launch(module, pending)) { child.failed(120, "Could not acquire change log lock"); }
         }
         assertEquals("true", scalar("SELECT locked::text FROM databasechangeloglock"));
+        assertEquals("1", scalar("SELECT count(*) FROM databasechangelog"));
     }
 
     private final class Running implements AutoCloseable {
@@ -218,7 +231,7 @@ class PostgreSqlIT {
         }
 
         void failed(int seconds, String reason) throws Exception {
-            assertTrue(process.waitFor(seconds, TimeUnit.SECONDS), "Negative startup deadline: " + module);
+            assertTrue(process.waitFor(seconds, TimeUnit.SECONDS), "Negative startup deadline: " + module + "\n" + safeLogs());
             assertNotEquals(0, process.exitValue(), safeLogs());
             assertFalse(logs().contains("WORKER_BOOTSTRAP_OK"), safeLogs());
             assertFalse(logs().contains("Started BackendApplication"), safeLogs());
