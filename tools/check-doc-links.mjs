@@ -8,7 +8,7 @@ function markdown(directory) {
       : entry.name.endsWith('.md') ? [join(directory, entry.name)] : []);
 }
 const files = ['README.md', 'AGENTS.md'].map(file => join(root, file))
-  .concat(markdown(join(root, 'docs')), markdown(join(root, 'openspec')));
+  .concat(markdown(join(root, 'docs')), markdown(join(root, 'contracts')));
 let checked = 0;
 const failures = [];
 for (const file of files) {

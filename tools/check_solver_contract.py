@@ -473,7 +473,7 @@ class ContractChecks(unittest.TestCase):
 
     def test_documentation_links_including_contracts(self):
         files = [ROOT / 'README.md', ROOT / 'AGENTS.md']
-        for directory in ['docs', 'openspec', 'contracts']:
+        for directory in ['docs', 'contracts']:
             files.extend((ROOT / directory).rglob('*.md'))
         for file in files:
             content = re.sub(r'^```[^\n]*\n[\s\S]*?^```\s*$', '', file.read_text(encoding='utf-8'), flags=re.M)
