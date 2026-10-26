@@ -42,9 +42,3 @@ Frontend: React/React DOM, TypeScript, Vite/react plugin и типы; Vitest/RTL
 - [IDEA поддерживает Java 25](https://www.jetbrains.com/help/idea/supported-java-versions.html). [Бесплатная основа актуальной IDEA](https://lp.jetbrains.com/intellij-idea-unified-faq/) включает Java/Maven; расширенные Spring/web-возможности могут требовать подписки. Сборки и запуск через Wrapper/npm не зависят от Ultimate или пробного периода; смена IDE не требуется. Для frontend допустим текстовый редактор и CLI.
 
 Это согласованный поднабор для каркаса, а не принятие ADR-0008 целиком или замена Java/Spring и React/TypeScript. Статус ADR-0008 остаётся «Предложено» для остальных инструментов. Результат установки или сборки не означает прохождения процессных, HTTP- и инфраструктурных проверок.
-
-## Установленный OpenSpec
-
-Фактически установлен **OpenSpec 1.15.0**, MIT, глобальный npm-пакет `@fission-ai/openspec@1.15.0`; версия и CLI help проверены. Официальный standalone-установщик проверил контрольную сумму загрузки, но файл не прошёл его проверку запуска. Выполнен поддерживаемый [официальной инструкцией](https://openspec.dev/docs/installation) npm-вариант; причина отказа standalone не установлена.
-
-Штатная инициализация для Codex выполнена с параметрами `--tools codex --language Russian --profile core --no-animation`. Используются `spec-driven`, [проектная конфигурация](https://openspec.dev/docs/project-config) и [официальный CLI](https://openspec.dev/docs/cli). На этапе подготовки устанавливался только OpenSpec; на этапе реализации отдельно установлены согласованные инструменты и зависимости каркаса.

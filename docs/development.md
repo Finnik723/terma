@@ -1,6 +1,6 @@
 # Сборка, запуск и проверки каркаса
 
-Документ описывает только технический `application-scaffold`. Здесь нет расчётов, scientific stub, доменных API, БД, брокера, прав или обработки заданий. Адаптер и научные контракты будут отдельным изменением. Версии и источники — [technology-baseline.md](technology-baseline.md), согласованный объём — [design](../openspec/changes/application-scaffold/design.md).
+Документ описывает только технический `application-scaffold`. Здесь нет расчётов, scientific stub, доменных API, БД, брокера, прав или обработки заданий. Адаптер и научные контракты будут отдельным изменением. Версии и источники — [technology-baseline.md](technology-baseline.md), согласованный объём — [описание каркаса](development.md).
 
 ## Windows 10: предпосылки
 
@@ -34,7 +34,6 @@ npm.cmd test
 Set-Location 'C:\Users\79067\source\repos\terma'
 node --test tools/runtime.test.mjs tools/frontend-config.test.mjs
 node tools/check-doc-links.mjs
-openspec.cmd validate --all --strict --no-interactive
 ```
 
 JVM-сборка независима от frontend: корневой Maven reactor собирает `backend/target/terma-backend.jar` и `worker/target/terma-worker.jar`. Frontend независимо выпускает `frontend/dist/`. `npm ci` не обновляет lockfile; изменение зависимостей требует намеренного обновления manifest/lockfile. `.npmrc` и preinstall проверяют Node/npm.
@@ -128,7 +127,7 @@ Vite явно читает allowlist `TERMA_*` для своего proxy/пор�
 
 | Проверка | Среда и смысл |
 | --- | --- |
-| Build and unit | Ubuntu 24.04 и Windows Server 2022: Wrapper, npm ci, typecheck/build, JVM/component/configuration tests, ссылки, OpenSpec strict |
+| Build and unit | Ubuntu 24.04 и Windows Server 2022: Wrapper, npm ci, typecheck/build, JVM/component/configuration tests, ссылки |
 | Linux processes and real frontend/backend HTTP | Ubuntu 24.04: собранные JAR, process smoke, Chromium и настоящий браузерный HTTP через Vite preview; проверяется также остановка backend |
 | PostgreSQL/Kafka availability | Не настроено и не выполняется |
 | PostgreSQL/Kafka integrations | Не реализовано и не выполняется; H2 и фиктивный брокер не используются |
@@ -137,7 +136,7 @@ Playwright на Windows 10 не является поддерживаемым л
 
 E2E использует собственные адреса из `frontend/e2e/settings.ts`: Playwright baseURL/ожидание preview, `webServer.env` и параметры JVM согласованы между собой. Пользовательские `TERMA_FRONTEND_PORT`, `TERMA_BACKEND_URL`, `SERVER_PORT`, `SERVER_ADDRESS` и локальные `.env` не выбирают адреса теста. Это не отменяет требование свободных тестовых портов. В Linux CI есть отдельный реальный E2E-прогон с отличающимися environment и `.env.local`; файл создаётся только в чистой CI-копии с проверкой отсутствия и удаляется после прогона.
 
-Сборка не доказывает запуск, запуск не доказывает HTTP, HTTP не доказывает доступность БД/брокера или научную корректность. Матрица исходной приёмки — D-07 в design; фактические результаты и ссылки на CI — в [отчёте проверки](verification.md).
+Сборка не доказывает запуск, запуск не доказывает HTTP, HTTP не доказывает доступность БД/брокера или научную корректность. Исходные критерии — в [технических требованиях](technical-requirements.md); фактические результаты и ссылки на CI — в [отчёте проверки](verification.md).
 
 ## Граница дальнейшего расширения
 
