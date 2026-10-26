@@ -4,7 +4,7 @@ Backend и worker используют PostgreSQL и общий Liquibase change
 
 ## Windows 10: предпосылки
 
-Нужны Temurin **25.0.4.1+1**, Node **24.22.1** с npm **11.19.1** и Git. Maven устанавливать не нужно: он загружается Wrapper с проверкой SHA-256. Первые сборки/установки требуют доступа к Maven Central/npm; WSL2, Docker, PostgreSQL, Kafka и VPS не нужны. Не требуется платная поддержка Spring в IDE.
+Нужны Temurin **25.0.4.1+1**, Node **24.22.1** с npm **11.19.1** и Git. Maven загружается Wrapper с проверкой SHA-256. Первые сборки/установки требуют доступа к Maven Central/npm; сборки и изолированные тесты не требуют WSL2, Docker, PostgreSQL, Kafka или VPS. Для штатного запуска backend/worker нужна доступная PostgreSQL, как описано ниже. Платная поддержка Spring в IDE не требуется.
 
 На компьютере пользователя выбранный toolchain уже установлен отдельно от системного Node. Для каждого терминала ниже используется это окружение:
 

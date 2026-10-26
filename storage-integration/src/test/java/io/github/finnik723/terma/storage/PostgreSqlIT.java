@@ -169,7 +169,7 @@ class PostgreSqlIT {
 
     @Test void connectionLossDuringStartupIsNotReportedAsSuccess() throws Exception {
         worker();
-        sql("UPDATE databasechangeloglock SET locked=true, lockedby='integration-test'");
+        sql("UPDATE databasechangeloglock SET locked=true, lockedby='integration-test', lockgranted=CURRENT_TIMESTAMP");
         // Liquibase intentionally bypasses the lock when no changes are pending.
         var pending = pendingMigration();
         for (String module : new String[]{"backend", "worker"}) {
@@ -185,12 +185,13 @@ class PostgreSqlIT {
 
     @Test void persistentLiquibaseLockFailsWithinBoundWithoutClearingTheOwner() throws Exception {
         worker();
-        sql("UPDATE databasechangeloglock SET locked=true, lockedby='integration-test'");
+        sql("UPDATE databasechangeloglock SET locked=true, lockedby='integration-test', lockgranted=CURRENT_TIMESTAMP");
         var pending = pendingMigration();
         for (String module : new String[]{"backend", "worker"}) {
             try (var child = launch(module, pending)) { child.failed(120, "Could not acquire change log lock"); }
         }
         assertEquals("true", scalar("SELECT locked::text FROM databasechangeloglock"));
+        assertEquals("integration-test", scalar("SELECT lockedby FROM databasechangeloglock"));
         assertEquals("1", scalar("SELECT count(*) FROM databasechangelog"));
     }
 
