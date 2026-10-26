@@ -17,7 +17,10 @@ export default defineConfig(({ mode }) => {
       || target.username || target.password || target.pathname !== '/' || target.search || target.hash) {
     throw new Error('TERMA_BACKEND_URL must be a loopback HTTP origin without credentials, path, query or fragment.');
   }
-  const proxy = { '^/actuator/health/liveness$': { target: target.origin } };
+  const proxy = {
+    '^/actuator/health/liveness$': { target: target.origin },
+    '^/api/': { target: target.origin },
+  };
   return {
     plugins: [react()],
     server: { host: '127.0.0.1', port: Number(portText), strictPort: true, proxy },

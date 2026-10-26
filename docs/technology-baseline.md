@@ -40,7 +40,7 @@ Backend: Spring Boot MVC, Actuator и тестовые средства. Worker:
 
 Frontend: React/React DOM, TypeScript, Vite/react plugin и типы; Vitest/RTL/jsdom для компонентных проверок; Playwright для небольшой браузерной проверки настоящей HTTP-связи в Linux CI. Минимальный экран — обычный CSS и native fetch.
 
-**Отложены:** Hibernate/JPA, Spring Kafka, Spring Security, Ant Design, React Router, TanStack Query, Apache ECharts, генерация OpenAPI, Testcontainers и Docker Compose-конфигурация. Liquibase и PostgreSQL JDBC добавлены в №6. Остальные инструменты подключаются по необходимости соответствующих задач. При добавлении Hibernate и связанных зависимостей применяется [BOM Spring Boot](https://docs.spring.io/spring-boot/appendix/dependency-versions/coordinates.html), без независимого закрепления несовместимых версий.
+**Отложены:** Hibernate/JPA, Spring Kafka, Ant Design, React Router, TanStack Query, Apache ECharts, генерация OpenAPI, Testcontainers и Docker Compose-конфигурация. Liquibase и PostgreSQL JDBC добавлены в №6. В №7 добавлен `spring-boot-starter-security`: Spring Security **7.1.2** из BOM **4.1.2**, стабильный Apache-2.0; session/CSRF/BCrypt и источники описаны в [аутентификации](authentication.md). OpenAPI пока хранится вручную. Остальные инструменты подключаются по необходимости соответствующих задач. При добавлении Hibernate и связанных зависимостей применяется [BOM Spring Boot](https://docs.spring.io/spring-boot/appendix/dependency-versions/coordinates.html), без независимого закрепления несовместимых версий.
 
 ## Уточнения рекомендаций и среды
 

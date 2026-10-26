@@ -101,6 +101,9 @@ jobs:
           npm ci --no-fund
           npm run build
           npx --no-install playwright install --with-deps chromium
+      - name: Generate ephemeral browser-test passwords
+        run: |
+          node --input-type=module -e "import {randomUUID} from 'node:crypto'; import {appendFileSync} from 'node:fs'; for (const n of [1,2]) { const value=randomUUID(); console.log('::add-mask::'+value); appendFileSync(process.env.GITHUB_ENV, 'TERMA_E2E_PASSWORD_'+n+'='+value+'\n'); }"
       - name: Real browser HTTP (no positive-response mock)
         working-directory: frontend
         run: npm run test:e2e

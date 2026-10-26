@@ -2,6 +2,9 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest';
 import { App } from '../src/App';
 
+// Authentication has its own HTTP/state tests. Keep the existing liveness tests focused.
+vi.mock('../src/AuthPanel', () => ({ AuthPanel: () => null }));
+
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 const button = () => screen.getByRole('button', { name: 'Проверить связь' });
 const response = (body: string, status = 200) => new Response(body, { status });

@@ -1,0 +1,198 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Terma authentication API",
+    "version": "1.0.0",
+    "description": "Issue #7. Same-origin session authentication without registration. See ../authentication.md."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "sessionCookie": []
+    }
+  ],
+  "paths": {
+    "/api/auth/csrf": {
+      "get": {
+        "operationId": "getCsrf",
+        "summary": "Получить маскированный CSRF-токен",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Создаёт анонимную сессию при необходимости. Cache-Control: no-store.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Csrf"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/session": {
+      "get": {
+        "operationId": "getSession",
+        "summary": "Текущая сессия",
+        "responses": {
+          "200": {
+            "description": "Только публичное имя пользователя, без hash/credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Сессия отсутствует либо неверные credentials"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "login",
+        "summary": "Войти через заранее созданную учётную запись",
+        "description": "CSRF обязателен и до входа. Успех меняет session ID и инвалидирует прежний токен. Получите session и новый csrf.",
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrfHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-TOKEN",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "token из GET /api/auth/csrf для той же session cookie"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Успех, тело отсутствует"
+          },
+          "401": {
+            "description": "Сессия отсутствует либо неверные credentials"
+          },
+          "403": {
+            "description": "CSRF-токен отсутствует, истёк или неверен"
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "summary": "Инвалидировать сессию и удалить cookie",
+        "description": "Нужны session cookie и актуальный CSRF-токен. Допускается анонимная сессия с валидным токеном. GET logout не выполняет.",
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrfHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-TOKEN",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Успех, тело отсутствует"
+          },
+          "403": {
+            "description": "CSRF-токен отсутствует, истёк или неверен"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "JSESSIONID",
+        "description": "HttpOnly; SameSite=Lax; Path=/; Secure=true для HTTPS. Idle timeout 30 минут, память одного backend."
+      },
+      "csrfHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CSRF-TOKEN"
+      }
+    },
+    "schemas": {
+      "Session": {
+        "type": "object",
+        "required": [
+          "username"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "username": {
+            "type": "string"
+          }
+        }
+      },
+      "Csrf": {
+        "type": "object",
+        "required": [
+          "headerName",
+          "token"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "headerName": {
+            "type": "string",
+            "const": "X-CSRF-TOKEN"
+          },
+          "token": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

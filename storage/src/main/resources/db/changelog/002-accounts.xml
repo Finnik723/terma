@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.31.xsd">
+  <changeSet id="002-accounts" author="terma">
+    <sql dbms="postgresql"><![CDATA[
+      CREATE TABLE user_account (
+        id UUID PRIMARY KEY,
+        username VARCHAR(64) NOT NULL UNIQUE CHECK (username ~ '^[a-zA-Z0-9._-]{1,64}$'),
+        password_hash VARCHAR(60) NOT NULL CHECK (password_hash ~ '^\$2[aby]\$12\$[./A-Za-z0-9]{53}$'),
+        enabled BOOLEAN NOT NULL DEFAULT TRUE
+      );
+    ]]></sql>
+  </changeSet>
+</databaseChangeLog>
