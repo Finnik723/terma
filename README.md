@@ -10,7 +10,9 @@ Web-приложение для геохимического термодина�
 
 Реализация каркаса объединена в main через PR №2. Каркас проверяет только сборку, bootstrap процессов и технический HTTP; доменная/научная функциональность и интеграции PostgreSQL/Kafka отсутствуют. Развёртывание VPS исключено. Архивирование application-scaffold — отдельное действие, не выполняемое в текущем задании.
 
-Прототип требует временного решателя с реальным упрощённым вычислением; возврат входа отменён ([ADR-0010](docs/adr/0010-prototype-minimization-solver.md)). Текущий этап закрепляет [контракт приложения v1](docs/solver-contract.md) и [адаптер будущей подсистемы HCh](docs/adr/0011-equilibrium-contract-and-hch-adapter.md): CLOSED-вход в элементах, отдельный фазовый результат, capabilities, provenance и правила версий. Решатель не реализуется. Совместимость с неизвестным API HCh и научная достоверность результатов не считаются доказанными; LP/H/S/V/Hipparchus остаются кандидатом реализации.
+Прототип требует временного решателя с реальным упрощённым вычислением; возврат входа отменён ([ADR-0010](docs/adr/0010-prototype-minimization-solver.md)). Документационный [контракт приложения v1](docs/solver-contract.md) и [граница адаптера будущей подсистемы HCh](docs/adr/0011-equilibrium-contract-and-hch-adapter.md) объединены в main через PR №4: CLOSED-вход в элементах, отдельный фазовый результат, capabilities, provenance и правила версий. Решатель не реализован. Совместимость с неизвестным API HCh и научная достоверность результатов не считаются доказанными; LP/H/S/V/Hipparchus остаются кандидатом реализации.
+
+Для [задачи №6](https://github.com/Finnik723/terma/issues/6) подготовлен [план PostgreSQL/Liquibase](openspec/changes/postgresql-liquibase-foundation/proposal.md): подключение backend/worker, единые миграции и обязательная проверка настоящей PostgreSQL в Linux CI. Сейчас это только артефакты для просмотра; код, зависимости и CI не менялись. Предметное сохранение проектов, моделей, прав и расчётов потребует следующих story.
 
 ## Навигация
 
@@ -25,6 +27,7 @@ Web-приложение для геохимического термодина�
 | [Открытые свидетельства HCh](docs/research/hch-public-evidence.md) | Источники, ограничения доступа и архитектурные выводы |
 | [Схемы и примеры](contracts/equilibrium/v1/README.md) | JSON Schema 1.0 и синтетические фикстуры |
 | [Контрактное изменение](openspec/changes/equilibrium-engine-contract/proposal.md) | Proposal, delta spec, дизайн и задачи только документационного этапа |
+| [План PostgreSQL/Liquibase](openspec/changes/postgresql-liquibase-foundation/proposal.md) | Постановка задачи №6, сценарии, дизайн и задачи; реализация ещё не начата |
 | [Проверки контракта](docs/solver-contract-verification.md) | Фактическая проверка схем и балансов, отдельно от будущих вычислений |
 | [Процесс разработки](docs/development-workflow.md) | SDD, OpenSpec и границы следующих этапов |
 | [Предложение каркаса](openspec/changes/application-scaffold/proposal.md) | Объём первого изменения; далее читать три delta specs, дизайн и задачи |
@@ -50,4 +53,4 @@ Git-подготовка не добавляет лицензии на прил�
 
 ## Следующий шаг
 
-Ревью документационного [контракта](docs/solver-contract.md), [ADR-0011](docs/adr/0011-equilibrium-contract-and-hch-adapter.md) и [проверок](docs/solver-contract-verification.md). Следующая вычислительная реализация требует отдельного поручения и дизайна; схемы не означают готовый решатель. Самостоятельный merge не выполняется. Архивирование каркаса остаётся отдельным действием с проверкой внутренних и входящих ссылок.
+Просмотр [постановки PostgreSQL/Liquibase](openspec/changes/postgresql-liquibase-foundation/proposal.md), [сценариев](openspec/changes/postgresql-liquibase-foundation/specs/postgresql-storage/spec.md), [дизайна](openspec/changes/postgresql-liquibase-foundation/design.md) и [задач](openspec/changes/postgresql-liquibase-foundation/tasks.md). Реализация требует нового поручения после просмотра по REQ-PROC-001. Вычислительная реализация остаётся отдельным этапом; схемы не означают готовый решатель. Самостоятельный merge и архивирование/sync существующих изменений не выполняются.
