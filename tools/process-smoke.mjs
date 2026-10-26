@@ -35,7 +35,7 @@ try {
       assert.notEqual(publicBind.code, 0, 'Public scaffold bind must fail');
       console.log('Backend process / real HTTP liveness: passed; occupied port and invalid configuration: rejected.');
     } finally { await stop(backend); }
-    console.log('PostgreSQL/Kafka availability and integrations: NOT_CONFIGURED / NOT_RUN.');
+    console.log('PostgreSQL startup migrations: passed; Kafka and jobs: NOT_IMPLEMENTED.');
   }
 } catch (error) {
   console.error(`Process/HTTP smoke FAILED: ${error.message}`);

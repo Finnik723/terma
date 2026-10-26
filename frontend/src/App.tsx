@@ -50,7 +50,7 @@ export function App() {
       <button onClick={checkConnection} disabled={status === 'checking'}>Проверить связь</button>
     </section>
     <section className="card" aria-labelledby="boundaries-title"><h2 id="boundaries-title">Границы проверки</h2>
-      <dl><div><dt>PostgreSQL / Kafka</dt><dd>Не подключены / не проверены</dd></div>
+      <dl><div><dt>PostgreSQL / Kafka</dt><dd>Не проверяются этим экраном</dd></div>
         <div><dt>Worker</dt><dd>Не проверен из браузера</dd></div>
         <div><dt>Научная подсистема</dt><dd>Не реализована</dd></div></dl></section>
     <footer>Terma · Каркас приложения и окружение разработки</footer>

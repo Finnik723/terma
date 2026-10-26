@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.31.xsd">
+  <changeSet id="001-storage-baseline" author="terma" logicalFilePath="db/changelog/db.changelog-master.xml">
+    <comment>Establish migration history without inventing domain tables.</comment>
+    <sql dbms="postgresql">SELECT 1;</sql>
+  </changeSet>
+</databaseChangeLog>

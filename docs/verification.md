@@ -1,5 +1,7 @@
 # Проверка application-scaffold
 
+Это исторический отчёт первоначального каркаса без БД. Последующие PostgreSQL/Liquibase-изменения и их фактические проверки описаны в [storage-verification.md](storage-verification.md); текущие команды — в [development.md](development.md).
+
 Дата: 25 октября 2026 года. Объём — [согласованный дизайн](development.md); команды воспроизведения — [development.md](development.md). Проверки категорий не заменяют друг друга.
 
 ## Фактически выполнено локально
