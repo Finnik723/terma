@@ -28,6 +28,14 @@
 
 ## Минимальные зависимости и отложенные инструменты
 
+### Дополнение задачи №6: PostgreSQL и Liquibase
+
+Общий модуль `storage` использует `spring-boot-starter-jdbc`, HikariCP **7.0.2**, PostgreSQL JDBC **42.7.14** и Liquibase Community **5.0.4** из BOM Spring Boot **4.1.2**. Версии подтверждены локальным `spring-boot-dependencies-4.1.2.pom` и сборкой, независимых overrides нет. API `SpringLiquibase`/`LockService` проверен по фактическому JAR; код задаёт единые миграции и конечное ожидание блокировки. JPA/Hibernate и Kafka этим не подключаются.
+
+[pgJDBC](https://jdbc.postgresql.org/license/) распространяется по BSD-2-Clause, [HikariCP](https://github.com/brettwooldridge/HikariCP/blob/dev/LICENSE) — Apache-2.0. Liquibase 5 использует **FSL-1.1-ALv2**, не Apache-2.0: [лицензия](https://github.com/liquibase/liquibase/blob/main/LICENSE.txt), [разъяснение издателя](https://github.com/liquibase/docker/blob/main/README.md) допускают бесплатное использование для миграций и ограничивают коммерческое предложение, конкурирующее с продуктами Liquibase. Community не требует Secure license key. Утверждение об Apache-2.0 для текущей Liquibase 5 не применяется.
+
+Для Linux CI выбран поддерживаемый стабильный PostgreSQL **18.6** ([официальная политика версий](https://www.postgresql.org/support/versioning/)). Официальный `postgres:18.6` закреплён digest `sha256:edb0c08dc33befd0262ab3b5cf1c4f3f8cfd8b09e88c05b45adee29d6761ddb6`, проверенным 26 октября 2026 года через Docker Registry API. Это изолированная CI-БД с временными учебными credentials, без пользовательского VPS или обязательного Docker на Windows.
+
 Backend: Spring Boot MVC, Actuator и тестовые средства. Worker: Spring Boot non-web bootstrap и тестовые средства, без web-сервера и потребителей Kafka. JUnit согласуется через BOM Spring Boot. Конкретные starter-артефакты сверяются с Boot 4.1.2 при реализации.
 
 Frontend: React/React DOM, TypeScript, Vite/react plugin и типы; Vitest/RTL/jsdom для компонентных проверок; Playwright для небольшой браузерной проверки настоящей HTTP-связи в Linux CI. Минимальный экран — обычный CSS и native fetch.

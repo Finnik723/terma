@@ -13,7 +13,7 @@ test('built frontend receives real backend UP and reports failure after backend 
     await expect(page.getByRole('heading', { name: 'Технический каркас' })).toBeVisible();
     await page.getByRole('button', { name: 'Проверить связь' }).click();
     await expect(page.getByRole('status')).toHaveText('Backend ответил на технический HTTP-запрос');
-    await expect(page.getByText('Не подключены / не проверены')).toBeVisible();
+    await expect(page.getByText('Не проверяются этим экраном')).toBeVisible();
     await stop(backend);
     await page.getByRole('button', { name: 'Проверить связь' }).click();
     await expect(page.getByRole('status')).toHaveText('Backend недоступен или вернул неожиданный ответ');

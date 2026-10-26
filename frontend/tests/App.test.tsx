@@ -9,7 +9,7 @@ const response = (body: string, status = 200) => new Response(body, { status });
 test('initial state does not claim a successful check', () => {
   render(<App/>);
   expect(screen.getByRole('status').textContent).toContain('ещё не проверена');
-  expect(screen.getByText('Не подключены / не проверены')).toBeTruthy();
+  expect(screen.getByText('Не проверяются этим экраном')).toBeTruthy();
 });
 
 test('accepts UP only from a successful HTTP response and keeps infrastructure unverified', async () => {
@@ -19,7 +19,7 @@ test('accepts UP only from a successful HTTP response and keeps infrastructure u
   fireEvent.click(button());
   await screen.findByText('Backend ответил на технический HTTP-запрос');
   expect(fetchMock.mock.calls[0][0]).toBe('/actuator/health/liveness');
-  expect(screen.getByText('Не подключены / не проверены')).toBeTruthy();
+  expect(screen.getByText('Не проверяются этим экраном')).toBeTruthy();
   expect(screen.getByText('Не проверен из браузера')).toBeTruthy();
 });
 

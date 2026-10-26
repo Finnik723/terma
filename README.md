@@ -6,11 +6,11 @@ Web-приложение для геохимического термодина�
 
 ## Текущий статус
 
-Реализован технический каркас: отдельные backend и worker, React/TypeScript frontend, Maven Wrapper, lockfile, тесты и CI (PR №2). Сборка, bootstrap и реальный технический HTTP проверены; доменные API, хранение PostgreSQL, Kafka и научные вычисления пока отсутствуют. Команды — [development.md](docs/development.md), результаты — [verification.md](docs/verification.md).
+Реализованы технический каркас (PR №2) и подключение PostgreSQL/Liquibase для backend/worker по задаче №6. Оба процесса требуют внешние datasource-настройки и применяют единые миграции перед успешным стартом. Доменные API, предметные таблицы, Kafka и научные вычисления пока отсутствуют. Команды — [development.md](docs/development.md), исходные проверки — [verification.md](docs/verification.md), проверки хранения — [storage-verification.md](docs/storage-verification.md).
 
 Документационный [контракт приложения v1](docs/solver-contract.md), ADR-0011, схемы и синтетические примеры объединены через PR №4. Контракт описывает одну CLOSED-задачу реактора, раздельные вход/выход, научные версии и заменяемый адаптер. Это не готовый решатель и не доказанная совместимость с HCh.
 
-Прототип должен выполнять реальную упрощённую минимизацию ([ADR-0010](docs/adr/0010-prototype-minimization-solver.md)); модель, метод и численная приёмка ещё согласуются с научным экспертом. LP/постоянные H/S/V/Hipparchus остаются кандидатом. Для [задачи №6](https://github.com/Finnik723/terma/issues/6) сохранены [критерии PostgreSQL/Liquibase](docs/storage-foundation.md); реализация хранения ещё не начата.
+Прототип должен выполнять реальную упрощённую минимизацию ([ADR-0010](docs/adr/0010-prototype-minimization-solver.md)); модель, метод и численная приёмка ещё согласуются с научным экспертом. LP/постоянные H/S/V/Hipparchus остаются кандидатом. [Критерии PostgreSQL/Liquibase](docs/storage-foundation.md) относятся к инфраструктуре хранения; сохранение проектов, моделей, прав и расчётов требует следующих предметных задач.
 
 ## Документация
 

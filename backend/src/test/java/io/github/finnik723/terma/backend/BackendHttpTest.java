@@ -7,10 +7,17 @@ import java.net.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+// Isolated HTTP check. Real application startup with storage is exercised by PostgreSQL CI.
+@SpringBootTest(classes = BackendHttpTest.HttpOnly.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class BackendHttpTest {
+    @SpringBootConfiguration
+    @EnableAutoConfiguration(exclude = DataSourceAutoConfiguration.class)
+    static class HttpOnly {}
     @LocalServerPort int port;
 
     private HttpResponse<String> get(String path) throws Exception {
