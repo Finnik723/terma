@@ -60,14 +60,16 @@
       "post": {
         "operationId": "login",
         "summary": "Войти через заранее созданную учётную запись",
-        "description": "CSRF обязателен и до входа. Успех меняет session ID и инвалидирует прежний токен. Получите session и новый csrf.",
-        "security": [
-          {
-            "sessionCookie": [],
-            "csrfHeader": []
-          }
-        ],
+        "description": "Публичная операция, предварительная аутентификация не требуется (security: []). Сначала вызовите GET /api/auth/csrf и сохраните выданную HTTP-session cookie: она может быть анонимной и сама по себе не означает вход пользователя. Передайте эту cookie вместе с полученным CSRF-токеном. Успех меняет session ID и инвалидирует прежний токен. Получите session и новый csrf.",
+        "security": [],
         "parameters": [
+          {
+            "in": "cookie",
+            "name": "JSESSIONID",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "HTTP-сессия из GET /api/auth/csrf, в том числе анонимная. Браузер отправляет HttpOnly cookie автоматически; аутентифицированный пользователь не требуется."
+          },
           {
             "in": "header",
             "name": "X-CSRF-TOKEN",
@@ -120,14 +122,16 @@
       "post": {
         "operationId": "logout",
         "summary": "Инвалидировать сессию и удалить cookie",
-        "description": "Нужны session cookie и актуальный CSRF-токен. Допускается анонимная сессия с валидным токеном. GET logout не выполняет.",
-        "security": [
-          {
-            "sessionCookie": [],
-            "csrfHeader": []
-          }
-        ],
+        "description": "Нужны HTTP-session cookie и актуальный CSRF-токен. Аутентификация не обязательна: допускается анонимная сессия с валидным токеном. GET logout не выполняет.",
+        "security": [],
         "parameters": [
+          {
+            "in": "cookie",
+            "name": "JSESSIONID",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "HTTP-сессия, которой принадлежит CSRF-токен; допустима анонимная сессия."
+          },
           {
             "in": "header",
             "name": "X-CSRF-TOKEN",
@@ -154,12 +158,7 @@
         "type": "apiKey",
         "in": "cookie",
         "name": "JSESSIONID",
-        "description": "HttpOnly; SameSite=Lax; Path=/; Secure=true для HTTPS. Idle timeout 30 минут, память одного backend."
-      },
-      "csrfHeader": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "X-CSRF-TOKEN"
+        "description": "Для защищённых операций требуется аутентифицированная HTTP-сессия. Анонимная cookie из GET /api/auth/csrf не подтверждает вход пользователя. HttpOnly; SameSite=Lax; Path=/; Secure=true для HTTPS. Idle timeout 30 минут, память одного backend."
       }
     },
     "schemas": {

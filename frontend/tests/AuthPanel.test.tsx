@@ -95,3 +95,40 @@ test('blocks double submission while the login request is pending', async () => 
   await act(async () => finish(response(token)));
   await waitFor(() => expect(screen.getByText('Неверное имя пользователя или пароль')).toBeTruthy());
 });
+
+test.each([
+  { action: 'login', failure: 'post', authenticated: true },
+  { action: 'login', failure: 'session', authenticated: true },
+  { action: 'login', failure: 'post', authenticated: false },
+  { action: 'logout', failure: 'post', authenticated: false },
+  { action: 'logout', failure: 'session', authenticated: false },
+  { action: 'logout', failure: 'post', authenticated: true },
+])('restores actual identity after uncertain $action ($failure failure, authenticated=$authenticated)', async ({ action, failure, authenticated }) => {
+  const fetchMock = vi.fn().mockResolvedValueOnce(response(action === 'login' ? null : { username: 'demo1' }, action === 'login' ? 401 : 200))
+    .mockResolvedValueOnce(response(token));
+  if (failure === 'post') fetchMock.mockRejectedValueOnce(new Error('response lost'));
+  else fetchMock.mockResolvedValueOnce(response(null, 204)).mockRejectedValueOnce(new Error('session read failed'));
+  fetchMock.mockResolvedValueOnce(response(authenticated ? { username: 'demo1' } : null, authenticated ? 200 : 401));
+  vi.stubGlobal('fetch', fetchMock);
+  render(<AuthPanel/>);
+  if (action === 'login') await fillLogin();
+  else fireEvent.click(await screen.findByRole('button', { name: 'Выйти' }));
+  await screen.findByText('Состояние сессии недоступно');
+  expect(screen.queryByRole('button', { name: 'Войти' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Выйти' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Повторить проверку сессии' }));
+  await screen.findByRole('button', { name: authenticated ? 'Выйти' : 'Войти' });
+  expect(screen.queryByRole('alert')).toBeNull();
+  expect(screen.queryByText('Состояние сессии недоступно')).toBeNull();
+  expect(fetchMock.mock.lastCall?.[0]).toBe('/api/auth/session');
+  expect(fetchMock.mock.calls.filter(([path]) => path === `/api/auth/${action}`)).toHaveLength(1);
+  if (!authenticated) expect((screen.getByLabelText('Пароль') as HTMLInputElement).value).toBe('');
+
+  // The next explicit mutation also completes normally: no stale failed/pending state.
+  fetchMock.mockResolvedValueOnce(response(token)).mockResolvedValueOnce(response(null, 204))
+    .mockResolvedValueOnce(response(authenticated ? null : { username: 'demo1' }, authenticated ? 401 : 200));
+  if (authenticated) fireEvent.click(screen.getByRole('button', { name: 'Выйти' }));
+  else await fillLogin();
+  await screen.findByRole('button', { name: authenticated ? 'Войти' : 'Выйти' });
+  expect(screen.queryByRole('alert')).toBeNull();
+});

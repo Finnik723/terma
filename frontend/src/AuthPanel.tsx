@@ -3,16 +3,21 @@ import type { FormEvent } from 'react';
 
 type Session = { username: string };
 type Csrf = { headerName: string; token: string };
+type Identity = { status: 'unknown' } | { status: 'anonymous' } | { status: 'authenticated'; session: Session };
+type Operation = { status: 'idle' } | { status: 'pending' } | { status: 'failed'; message: string };
 
 // Neither credentials nor the CSRF token are persisted in browser storage.
 export function AuthPanel() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [identity, setIdentity] = useState<Identity>({ status: 'unknown' });
+  const [operation, setOperation] = useState<Operation>({ status: 'pending' });
+  const busy = operation.status === 'pending';
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const active = useRef<AbortController | null>(null);
+
+  function acceptSession(session: Session | null) {
+    setIdentity(session ? { status: 'authenticated', session } : { status: 'anonymous' });
+  }
 
   async function readSession(signal: AbortSignal) {
     const response = await fetch('/api/auth/session', { credentials: 'same-origin', cache: 'no-store', signal });
@@ -29,13 +34,18 @@ export function AuthPanel() {
     active.current?.abort();
     const controller = new AbortController();
     active.current = controller;
-    setState('loading');
-    setError('');
+    setOperation({ status: 'pending' });
     try {
       const current = await readSession(AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]));
-      if (!controller.signal.aborted) { setSession(current); setState('ready'); }
+      if (!controller.signal.aborted) {
+        acceptSession(current);
+        setOperation({ status: 'idle' });
+      }
     } catch {
-      if (!controller.signal.aborted) setState('error');
+      if (!controller.signal.aborted) {
+        setIdentity({ status: 'unknown' });
+        setOperation({ status: 'failed', message: 'Не удалось проверить сессию. Проверьте соединение.' });
+      }
     }
   }
 
@@ -46,8 +56,7 @@ export function AuthPanel() {
 
   async function mutate(action: 'login' | 'logout') {
     if (busy) return;
-    setBusy(true);
-    setError('');
+    setOperation({ status: 'pending' });
     const controller = new AbortController();
     active.current = controller;
     const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]);
@@ -64,22 +73,27 @@ export function AuthPanel() {
       });
       if (action === 'login') setPassword('');
       if (response.status === 401 && action === 'login') {
-        setSession(null); setError('Неверное имя пользователя или пароль'); return;
+        acceptSession(null);
+        setOperation({ status: 'failed', message: 'Неверное имя пользователя или пароль' }); return;
       }
       if (response.status === 403) {
         // Reconcile a session changed/expired in another tab. Never retry credentials automatically.
-        setSession(await readSession(signal));
-        setError('Сессия изменилась. Повторите действие.'); return;
+        acceptSession(await readSession(signal));
+        setOperation({ status: 'failed', message: 'Сессия изменилась. Повторите действие.' }); return;
       }
       if (response.status !== 204) throw new Error('Authentication request failed');
-      setSession(await readSession(signal));
+      const current = await readSession(signal);
+      if (!controller.signal.aborted) {
+        acceptSession(current);
+        setOperation({ status: 'idle' });
+      }
     } catch {
       if (!controller.signal.aborted) {
-        setError('Не удалось подтвердить состояние сессии. Проверьте соединение.');
-        setState('error');
+        setIdentity({ status: 'unknown' });
+        setOperation({ status: 'failed', message: 'Не удалось подтвердить состояние сессии. Проверьте соединение.' });
       }
     } finally {
-      if (!controller.signal.aborted) { setPassword(''); setBusy(false); }
+      if (!controller.signal.aborted) setPassword('');
     }
   }
 
@@ -90,12 +104,14 @@ export function AuthPanel() {
 
   return <section className="card" aria-labelledby="auth-title">
     <h2 id="auth-title">Учётная запись</h2>
-    {state === 'loading' && <p>Проверяем сессию…</p>}
-    {state === 'error' && <><p role="alert">Состояние сессии недоступно</p><button onClick={() => void restore()}>Повторить проверку сессии</button></>}
-    {state === 'ready' && (session
-      ? <div className="session"><p>Вы вошли как <strong>{session.username}</strong></p>
+    {identity.status === 'unknown' && (busy
+      ? <p>Проверяем сессию…</p>
+      : <><p>Состояние сессии недоступно</p><button onClick={() => void restore()}>Повторить проверку сессии</button></>)}
+    {identity.status === 'authenticated' &&
+      <div className="session"><p>Вы вошли как <strong>{identity.session.username}</strong></p>
           <button disabled={busy} onClick={() => void mutate('logout')}>Выйти</button></div>
-      : <form onSubmit={login}>
+    }
+    {identity.status === 'anonymous' && <form onSubmit={login}>
           <p>Вход для заранее созданных учётных записей</p>
           <label htmlFor="username">Имя пользователя</label>
           <input id="username" name="username" autoComplete="username" required maxLength={64} value={username}
@@ -104,7 +120,7 @@ export function AuthPanel() {
           <input id="password" name="password" type="password" autoComplete="current-password" required value={password}
             disabled={busy} onChange={event => setPassword(event.target.value)}/>
           <button disabled={busy} type="submit">{busy ? 'Входим…' : 'Войти'}</button>
-        </form>)}
-    {error && <p role="alert">{error}</p>}
+        </form>}
+    {operation.status === 'failed' && <p role="alert">{operation.message}</p>}
   </section>;
 }
