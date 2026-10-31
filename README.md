@@ -6,7 +6,7 @@ Web-приложение для геохимического термодина�
 
 ## Текущий статус
 
-Реализованы технический каркас (PR №2) и подключение PostgreSQL/Liquibase для backend/worker по задаче №6. Оба процесса требуют внешние datasource-настройки и применяют единые миграции перед успешным стартом. Доменные API, предметные таблицы, Kafka и научные вычисления пока отсутствуют. Команды — [development.md](docs/development.md), исходные проверки — [verification.md](docs/verification.md), проверки хранения — [storage-verification.md](docs/storage-verification.md).
+Реализованы технический каркас (PR №2), подключение PostgreSQL/Liquibase для backend/worker (№6) и [вход/выход для заранее созданных учётных записей](docs/authentication.md) (№7). Оба процесса требуют внешние datasource-настройки и применяют единые миграции перед успешным стартом. Сессии, BCrypt и CSRF работают на backend, frontend восстанавливает сессию после перезагрузки. Проектные API, Kafka и научные вычисления пока отсутствуют. Команды — [development.md](docs/development.md), исходные проверки — [verification.md](docs/verification.md), проверки хранения — [storage-verification.md](docs/storage-verification.md), аутентификации — [authentication-verification.md](docs/authentication-verification.md).
 
 Документационный [контракт приложения v1](docs/solver-contract.md), ADR-0011, схемы и синтетические примеры объединены через PR №4. Контракт описывает одну CLOSED-задачу реактора, раздельные вход/выход, научные версии и заменяемый адаптер. Это не готовый решатель и не доказанная совместимость с HCh.
 

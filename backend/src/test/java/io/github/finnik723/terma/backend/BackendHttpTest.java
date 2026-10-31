@@ -10,6 +10,11 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Bean;
+import io.github.finnik723.terma.backend.auth.SecurityConfiguration;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import static org.junit.jupiter.api.Assertions.*;
 
 // Isolated HTTP check. Real application startup with storage is exercised by PostgreSQL CI.
@@ -17,7 +22,10 @@ import static org.junit.jupiter.api.Assertions.*;
 class BackendHttpTest {
     @SpringBootConfiguration
     @EnableAutoConfiguration(exclude = DataSourceAutoConfiguration.class)
-    static class HttpOnly {}
+    @Import(SecurityConfiguration.class)
+    static class HttpOnly {
+        @Bean UserDetailsService users() { return name -> { throw new UsernameNotFoundException("Invalid credentials"); }; }
+    }
     @LocalServerPort int port;
 
     private HttpResponse<String> get(String path) throws Exception {
@@ -33,7 +41,7 @@ class BackendHttpTest {
     }
 
     @Test void scaffoldDoesNotExposeDomainOrEnvironmentEndpoints() throws Exception {
-        assertEquals(404, get("/api/projects").statusCode());
-        assertEquals(404, get("/actuator/env").statusCode());
+        assertEquals(401, get("/api/projects").statusCode());
+        assertEquals(401, get("/actuator/env").statusCode());
     }
 }

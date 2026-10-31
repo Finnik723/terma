@@ -1,6 +1,6 @@
 # Сборка, запуск и проверки
 
-Backend и worker используют PostgreSQL и общий Liquibase changelog из модуля `storage`. Предметных таблиц, доменных API, расчётов и Kafka-потребителя пока нет. Версии — [technology-baseline.md](technology-baseline.md), критерии хранения — [storage-foundation.md](storage-foundation.md).
+Backend и worker используют PostgreSQL и общий Liquibase changelog из модуля `storage`. Задача №7 добавляет таблицу учётных записей и [session-аутентификацию](authentication.md), включая создание demo-аккаунтов и [OpenAPI](api/auth.openapi.json). Проектных API, расчётов и Kafka-потребителя пока нет. Версии — [technology-baseline.md](technology-baseline.md), критерии хранения — [storage-foundation.md](storage-foundation.md).
 
 ## Windows 10: предпосылки
 
@@ -94,7 +94,7 @@ Set-Location 'C:\Users\79067\source\repos\terma\frontend'
 npm.cmd run preview
 ```
 
-Dev и preview используют порт 5173 с `strictPort` и ограниченным proxy только для `/actuator/health/liveness`. При занятом порте запуск завершается ошибкой, без автоматического перехода на другой порт. Preview предназначен для технической проверки, не для production hosting. По завершении — `Ctrl+C`.
+Dev и preview используют порт 5173 с `strictPort` и proxy для `/actuator/health/liveness` и `/api/` (same-origin session/CSRF). При занятом порте запуск завершается ошибкой, без автоматического перехода на другой порт. Preview предназначен для технической проверки, не для production hosting. По завершении — `Ctrl+C`.
 
 ## Worker и smoke отдельных процессов
 
@@ -151,7 +151,7 @@ Vite явно читает allowlist `TERMA_*` для своего proxy/пор�
 | PostgreSQL migrations and startup failures | Ubuntu 24.04 и отдельная PostgreSQL 18.6 service container: оба JAR, миграции, повторный/конкурентный старт, сохранность технической записи и негативные старты |
 | Kafka availability/integration | Не реализовано и не выполняется |
 
-Playwright на Windows 10 не является поддерживаемым локальным путём. На Linux после сборок browser smoke выполняется из `frontend` командами `npx --no-install playwright install --with-deps chromium` и `npm run test:e2e`. Нужны backend JAR, Java, настроенная доступная PostgreSQL, свободные порты 8080/5173 и загрузка браузера. CI использует свою изолированную БД, без VPS. Все дочерние процессы останавливаются; отсутствие обязательной зависимости не превращается в skip.
+Playwright на Windows 10 не является поддерживаемым локальным путём. На Linux после сборок browser smoke выполняется из `frontend` командами `npx --no-install playwright install --with-deps chromium` и `npm run test:e2e`. Нужны backend JAR, Java, настроенная доступная PostgreSQL, свободные порты 8080/5173 и загрузка браузера. Auth E2E создаёт demo1/demo2 только в выделенной тестовой БД; перед первым прогоном нужны `TERMA_E2E_PASSWORD_1` и `TERMA_E2E_PASSWORD_2` (различные случайные строки от 12 символов, до 72 UTF-8 байтов). Повторные прогоны с той же БД используют прежние значения; существующие пароли не сбрасываются. CI генерирует их сам один раз на job, использует свою изолированную БД, без VPS. Все дочерние процессы останавливаются; отсутствие обязательной зависимости не превращается в skip.
 
 ## Настоящая PostgreSQL-интеграция
 

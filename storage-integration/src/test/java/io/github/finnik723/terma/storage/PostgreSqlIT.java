@@ -3,6 +3,9 @@ package io.github.finnik723.terma.storage;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URI;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -19,6 +22,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import tools.jackson.databind.json.JsonMapper;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Only active through -Ppostgresql-it; absence of PostgreSQL is a failure, never a skip. */
@@ -103,24 +108,24 @@ class PostgreSqlIT {
 
     @Test void bothApplicationsMigrateOnceAndPreserveCommittedDataOnRestart() throws Exception {
         worker();
-        assertEquals("1", scalar("SELECT count(*) FROM databasechangelog"));
+        assertEquals("2", scalar("SELECT count(*) FROM databasechangelog"));
         String checksum = scalar("SELECT md5sum FROM databasechangelog WHERE id='001-storage-baseline'");
         // A test-owned table, never shipped as a domain table or migration.
         sql("CREATE TABLE storage_probe (value text NOT NULL)");
         sql("INSERT INTO storage_probe VALUES ('committed-before-restart')");
         try (var backend = launch("backend", Map.of())) { backend.ready(); }
         worker();
-        assertEquals("1", scalar("SELECT count(*) FROM databasechangelog"));
+        assertEquals("2", scalar("SELECT count(*) FROM databasechangelog"));
         assertEquals(checksum, scalar("SELECT md5sum FROM databasechangelog WHERE id='001-storage-baseline'"));
         assertEquals("committed-before-restart", scalar("SELECT value FROM storage_probe"));
-        assertEquals("3", scalar("SELECT count(*) FROM information_schema.tables WHERE table_schema=current_schema()"));
+        assertEquals("4", scalar("SELECT count(*) FROM information_schema.tables WHERE table_schema=current_schema()"));
     }
 
     @Test void simultaneousCleanStartupUsesOneHistory() throws Exception {
         try (var backend = launch("backend", Map.of()); var worker = launch("worker", Map.of())) {
             backend.ready();
             worker.ready();
-            assertEquals("1", scalar("SELECT count(*) FROM databasechangelog"));
+            assertEquals("2", scalar("SELECT count(*) FROM databasechangelog"));
             assertEquals("false", scalar("SELECT locked::text FROM databasechangeloglock"));
         }
     }
@@ -160,11 +165,11 @@ class PostgreSqlIT {
             Files.deleteIfExists(broken);
         }
         worker();
-        sql("UPDATE databasechangelog SET md5sum='9:00000000000000000000000000000000'");
+        sql("UPDATE databasechangelog SET md5sum='9:00000000000000000000000000000000' WHERE id='001-storage-baseline'");
         for (String module : new String[]{"backend", "worker"}) {
             try (var child = launch(module, Map.of())) { child.failed(60, "check sum"); }
         }
-        assertEquals("9:00000000000000000000000000000000", scalar("SELECT md5sum FROM databasechangelog"));
+        assertEquals("9:00000000000000000000000000000000", scalar("SELECT md5sum FROM databasechangelog WHERE id='001-storage-baseline'"));
     }
 
     @Test void connectionLossDuringStartupIsNotReportedAsSuccess() throws Exception {
@@ -192,7 +197,71 @@ class PostgreSqlIT {
         }
         assertEquals("true", scalar("SELECT locked::text FROM databasechangeloglock"));
         assertEquals("integration-test", scalar("SELECT lockedby FROM databasechangeloglock"));
-        assertEquals("1", scalar("SELECT count(*) FROM databasechangelog"));
+        assertEquals("2", scalar("SELECT count(*) FROM databasechangelog"));
+    }
+
+    private HttpResponse<String> auth(HttpClient client, int port, String path, String body, String token) throws Exception {
+        var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + path)).timeout(Duration.ofSeconds(10));
+        if (token != null) request.header("X-CSRF-TOKEN", token);
+        if (body == null) request.GET();
+        else request.header("Content-Type", "application/x-www-form-urlencoded").POST(HttpRequest.BodyPublishers.ofString(body));
+        return client.send(request.build(), HttpResponse.BodyHandlers.ofString());
+    }
+
+    private String token(HttpClient client, int port) throws Exception {
+        var response = auth(client, port, "/api/auth/csrf", null, null);
+        assertEquals(200, response.statusCode());
+        return JsonMapper.builder().build().readTree(response.body()).get("token").asString();
+    }
+
+    @Test void databaseAccountsAuthenticateAndSurviveRestartWithoutPasswordReset() throws Exception {
+        String first = UUID.randomUUID().toString();
+        String second = UUID.randomUUID().toString();
+        var provision = Map.of("TERMA_DEMO_ACCOUNTS_ENABLED", "true", "TERMA_DEMO_PASSWORD_1", first, "TERMA_DEMO_PASSWORD_2", second);
+        String stored;
+        try (var backend = launch("backend", provision)) {
+            backend.ready();
+            assertEquals("2", scalar("SELECT count(*) FROM user_account"));
+            stored = scalar("SELECT password_hash FROM user_account WHERE username='demo1'");
+            assertNotEquals(first, stored);
+            assertTrue(new BCryptPasswordEncoder(12).matches(first, stored));
+            for (var account : Map.of("demo1", first, "demo2", second).entrySet()) {
+                var client = HttpClient.newBuilder().cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ALL)).build();
+                assertEquals(401, auth(client, backend.port, "/api/auth/session", null, null).statusCode());
+                String body = "username=" + account.getKey() + "&password=" + URLEncoder.encode(account.getValue(), java.nio.charset.StandardCharsets.UTF_8);
+                assertEquals(403, auth(client, backend.port, "/api/auth/login", body, null).statusCode());
+                assertEquals(204, auth(client, backend.port, "/api/auth/login", body, token(client, backend.port)).statusCode());
+                assertEquals("{\"username\":\"" + account.getKey() + "\"}", auth(client, backend.port, "/api/auth/session", null, null).body());
+                assertEquals(204, auth(client, backend.port, "/api/auth/logout", "", token(client, backend.port)).statusCode());
+                assertEquals(401, auth(client, backend.port, "/api/auth/session", null, null).statusCode());
+            }
+            assertFalse(backend.logs().contains(first));
+            assertFalse(backend.logs().contains(second));
+        }
+        // Running provisioning again with other inputs preserves existing credentials.
+        var repeated = Map.of("TERMA_DEMO_ACCOUNTS_ENABLED", "true", "TERMA_DEMO_PASSWORD_1", UUID.randomUUID().toString(),
+            "TERMA_DEMO_PASSWORD_2", UUID.randomUUID().toString());
+        try (var backend = launch("backend", repeated)) {
+            backend.ready();
+            assertEquals(stored, scalar("SELECT password_hash FROM user_account WHERE username='demo1'"));
+            assertEquals("2", scalar("SELECT count(*) FROM user_account"));
+            var client = HttpClient.newBuilder().cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ALL)).build();
+            assertEquals(204, auth(client, backend.port, "/api/auth/login", "username=demo1&password=" + first, token(client, backend.port)).statusCode());
+        }
+        sql("UPDATE user_account SET enabled=false WHERE username='demo1'");
+        try (var backend = launch("backend", Map.of())) {
+            backend.ready();
+            var client = HttpClient.newBuilder().cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ALL)).build();
+            assertEquals(401, auth(client, backend.port, "/api/auth/login", "username=demo1&password=" + first, token(client, backend.port)).statusCode());
+            assertEquals(401, auth(client, backend.port, "/api/auth/login", "username=%27%20OR%201%3D1--&password=" + first, token(client, backend.port)).statusCode());
+        }
+    }
+
+    @Test void invalidProvisioningFailsBeforeSuccessfulStartupAndCreatesNoAccounts() throws Exception {
+        try (var backend = launch("backend", Map.of("TERMA_DEMO_ACCOUNTS_ENABLED", "true", "TERMA_DEMO_PASSWORD_1", UUID.randomUUID().toString(), "TERMA_DEMO_PASSWORD_2", ""))) {
+            backend.failed(60, "TERMA_DEMO_PASSWORD_2 must");
+            assertEquals("0", scalar("SELECT count(*) FROM user_account"));
+        }
     }
 
     private final class Running implements AutoCloseable {

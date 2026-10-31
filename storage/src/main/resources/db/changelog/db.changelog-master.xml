@@ -6,4 +6,5 @@
     <comment>Establish migration history without inventing domain tables.</comment>
     <sql dbms="postgresql">SELECT 1;</sql>
   </changeSet>
+  <include file="db/changelog/002-accounts.xml"/>
 </databaseChangeLog>

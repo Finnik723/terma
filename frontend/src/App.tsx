@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { AuthPanel } from './AuthPanel';
 
 type Status = 'idle' | 'checking' | 'success' | 'error';
 const messages: Record<Status, string> = {
@@ -43,7 +44,8 @@ export function App() {
   return <main>
     <header><span className="brand">TERMA</span><span className="stage">Окружение разработки</span></header>
     <section className="intro"><p className="eyebrow">Термодинамическое моделирование</p>
-      <h1>Технический каркас</h1><p>Научные расчёты недоступны. Этот экран проверяет только HTTP-связь с backend.</p></section>
+      <h1>Технический каркас</h1><p>Научные расчёты недоступны. Доступны вход в учётную запись и проверка HTTP-связи с backend.</p></section>
+    <AuthPanel/>
     <section className="card" aria-labelledby="connection-title">
       <div><h2 id="connection-title">Связь с backend</h2><p>Ответ процесса не подтверждает готовность БД, брокера или расчётной подсистемы.</p></div>
       <p role="status" aria-live="polite" className={`status ${status}`}><span className="dot"/>{messages[status]}</p>
