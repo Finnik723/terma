@@ -40,10 +40,17 @@ public class ProjectService {
     }
 
     @Transactional
-    public Project create(UUID accountId, String name) {
+    public Optional<Project> create(UUID accountId, String name, UUID creationKey) {
         var projectId = UUID.randomUUID();
-        jdbc.update("INSERT INTO project (id, name, created_by) VALUES (?, ?, ?)", projectId, name, accountId);
+        int inserted = jdbc.update("""
+            INSERT INTO project (id, name, created_by, creation_key) VALUES (?, ?, ?, ?)
+            ON CONFLICT (created_by, creation_key) DO NOTHING
+            """, projectId, name, accountId, creationKey);
+        if (inserted == 0) {
+            return jdbc.query(MEMBER_PROJECTS + "AND p.created_by = ? AND p.creation_key = ?",
+                PROJECT, accountId, accountId, creationKey).stream().findFirst();
+        }
         jdbc.update("INSERT INTO project_member (project_id, user_id, role) VALUES (?, ?, 'OWNER')", projectId, accountId);
-        return find(accountId, projectId).orElseThrow();
+        return Optional.of(find(accountId, projectId).orElseThrow());
     }
 }

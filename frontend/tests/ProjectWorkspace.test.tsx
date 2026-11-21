@@ -34,14 +34,16 @@ test('starts with projects after restoring a session, validates the name, and cr
   expect(link.getAttribute('href')).toBe(`/projects/${project.id}`);
   expect(fetchMock.mock.calls[2][0]).toBe('/api/auth/csrf');
   expect(fetchMock.mock.calls[3]).toEqual(['/api/projects', expect.objectContaining({
-    method: 'POST', headers: { 'X-CSRF-TOKEN': csrf.token, 'Content-Type': 'application/json', 'X-Expected-Username': 'demo1' },
+    method: 'POST', headers: { 'X-CSRF-TOKEN': csrf.token, 'Content-Type': 'application/json',
+      'X-Expected-Username': 'demo1', 'Idempotency-Key': expect.any(String) },
     body: JSON.stringify({ name: project.name }),
   })]);
 });
 
-test('list failure leaves a retry, and a lost create response reloads without repeating POST', async () => {
+test('list failure leaves a retry, and retrying after a lost create response reuses the key', async () => {
   const fetchMock = vi.fn().mockResolvedValueOnce(json({}, 503)).mockResolvedValueOnce(json([]))
-    .mockResolvedValueOnce(json(csrf)).mockRejectedValueOnce(new Error('response lost')).mockResolvedValueOnce(json([project]));
+    .mockResolvedValueOnce(json(csrf)).mockRejectedValueOnce(new Error('response lost'))
+    .mockResolvedValueOnce(json(csrf)).mockResolvedValueOnce(json(project, 201)).mockResolvedValueOnce(json([project]));
   vi.stubGlobal('fetch', fetchMock);
   render(<ProjectWorkspace username="demo1" onSessionChanged={vi.fn()}/>);
   await screen.findByText('Не удалось загрузить проекты. Проверьте соединение.');
@@ -49,11 +51,13 @@ test('list failure leaves a retry, and a lost create response reloads without re
   const name = await screen.findByLabelText('Название проекта');
   fireEvent.change(name, { target: { value: project.name } });
   fireEvent.click(screen.getByRole('button', { name: 'Создать проект' }));
-  await screen.findByText('Не удалось подтвердить создание. Обновите список и проверьте, появился ли проект.');
-  expect(screen.queryByRole('button', { name: 'Создать проект' })).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Обновить список' }));
-  await screen.findByRole('link', { name: project.name });
+  await screen.findByText('Не удалось подтвердить создание. Проверьте соединение и повторите отправку.');
   expect(fetchMock.mock.calls.filter(([, options]) => options.method === 'POST')).toHaveLength(1);
+  fireEvent.click(screen.getByRole('button', { name: 'Создать проект' }));
+  await screen.findByRole('link', { name: project.name });
+  const writes = fetchMock.mock.calls.filter(([, options]) => options.method === 'POST');
+  expect(writes).toHaveLength(2);
+  expect(writes[1][1]).toMatchObject({ headers: { 'Idempotency-Key': writes[0][1].headers['Idempotency-Key'] } });
 });
 
 test('opens a project by URL after session restoration, and shows no project data on 404', async () => {

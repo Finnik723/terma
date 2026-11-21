@@ -10,7 +10,7 @@ async function login(page, username, password) {
   await expect(page.getByText(username, { exact: true })).toBeVisible();
 }
 
-test('creates and reopens a project, isolates accounts, and rejects a stale tab after an account switch', async ({ page, context }) => {
+test('creates and reopens a project, clears it in the other tab on logout, and isolates accounts', async ({ page, context }) => {
   const first = process.env.TERMA_E2E_PASSWORD_1;
   const second = process.env.TERMA_E2E_PASSWORD_2;
   if (!first || !second) throw new Error('TERMA_E2E_PASSWORD_1 and TERMA_E2E_PASSWORD_2 are required for project E2E');
@@ -40,16 +40,12 @@ test('creates and reopens a project, isolates accounts, and rejects a stale tab 
     const secondTab = await context.newPage();
     await secondTab.goto('/');
     await secondTab.getByRole('button', { name: 'Выйти' }).click();
+    await expect(page.getByRole('button', { name: 'Войти' })).toBeVisible();
+    await expect(link).toHaveCount(0);
     await login(secondTab, 'demo2', second);
-    const staleName = `Черновик ${randomUUID()}`;
-    await page.getByLabel('Название проекта').fill(staleName);
-    const rejected = page.waitForResponse(response => response.url().endsWith('/api/projects') && response.request().method() === 'POST');
-    await page.getByRole('button', { name: 'Создать проект' }).click();
-    expect((await rejected).status()).toBe(409);
     await expect(page.getByText('demo2', { exact: true })).toBeVisible();
     await expect(page.getByLabel('Название проекта')).toBeVisible();
     await expect(link).toHaveCount(0);
-    await expect(page.getByRole('link', { name: staleName })).toHaveCount(0);
     await page.goto(detail);
     await expect(page.getByRole('alert')).toHaveText('Проект не найден или у вас нет доступа.');
     await expect(page.getByRole('heading', { name })).toHaveCount(0);

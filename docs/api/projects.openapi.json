@@ -23,13 +23,21 @@
       "post": {
         "operationId": "createProject",
         "summary": "Создать проект и назначить текущему пользователю доступ OWNER",
-        "parameters": [{
-          "in": "header",
-          "name": "X-CSRF-TOKEN",
-          "required": true,
-          "description": "Токен из GET /api/auth/csrf для той же session cookie.",
-          "schema": { "type": "string", "minLength": 1 }
-        }],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-TOKEN",
+            "required": true,
+            "description": "Токен из GET /api/auth/csrf для той же session cookie.",
+            "schema": { "type": "string", "minLength": 1 }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "description": "UUID одной отправки. Повтор с тем же ключом в той же учётной записи возвращает первый созданный проект, если он доступен. Для нового проекта создаётся новый ключ.",
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": { "application/json": { "schema": {
@@ -51,9 +59,10 @@
             } },
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Project" } } }
           },
-          "400": { "description": "Некорректный JSON или недопустимое название проекта." },
+          "400": { "description": "Некорректный JSON, недопустимое название проекта либо некорректный ключ повторной отправки." },
           "401": { "$ref": "#/components/responses/Unauthenticated" },
           "403": { "description": "CSRF-токен отсутствует или недействителен. Эта проверка выполняется перед проверкой аутентифицированной сессии." },
+          "404": { "description": "Проект из предыдущей отправки с данным ключом больше недоступен." },
           "409": { "$ref": "#/components/responses/AccountChanged" }
         }
       }

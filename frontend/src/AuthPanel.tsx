@@ -30,6 +30,7 @@ export function AuthPanel({ children, anonymousContent }: Props) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const active = useRef<AbortController | null>(null);
+  const sessionChanges = useRef<BroadcastChannel | null>(null);
 
   const acceptSession = useCallback((session: Session | null) => {
     setIdentity(session ? { status: 'authenticated', session } : { status: 'anonymous' });
@@ -62,12 +63,17 @@ export function AuthPanel({ children, anonymousContent }: Props) {
 
   useEffect(() => {
     void restore();
+    const channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('terma-session') : null;
+    sessionChanges.current = channel;
+    channel?.addEventListener('message', () => { void restore(); });
     function recheckOnRestore(event: PageTransitionEvent) {
       if (event.persisted) void restore();
     }
     window.addEventListener('pageshow', recheckOnRestore);
     return () => {
       window.removeEventListener('pageshow', recheckOnRestore);
+      channel?.close();
+      sessionChanges.current = null;
       active.current?.abort();
     };
   }, [restore]);
@@ -78,14 +84,17 @@ export function AuthPanel({ children, anonymousContent }: Props) {
     const controller = new AbortController();
     active.current = controller;
     const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]);
+    let awaitingMutation = false;
     try {
       // Obtain a fresh token before each mutation: login/logout rotate the session/token.
       const headers = await csrfHeaders(signal);
+      awaitingMutation = true;
       const response = await fetch(`/api/auth/${action}`, {
         method: 'POST', credentials: 'same-origin', signal,
         headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded' },
         body: action === 'login' ? new URLSearchParams({ username, password }) : undefined,
       });
+      awaitingMutation = false;
       if (action === 'login') setPassword('');
       if (response.status === 401 && action === 'login') {
         acceptSession(null);
@@ -97,6 +106,7 @@ export function AuthPanel({ children, anonymousContent }: Props) {
         setOperation({ status: 'failed', message: 'Сессия изменилась. Повторите действие.' }); return;
       }
       if (response.status !== 204) throw new Error('Authentication request failed');
+      sessionChanges.current?.postMessage('changed');
       const current = await readSession(signal);
       if (!controller.signal.aborted) {
         acceptSession(current);
@@ -104,6 +114,7 @@ export function AuthPanel({ children, anonymousContent }: Props) {
       }
     } catch {
       if (!controller.signal.aborted) {
+        if (awaitingMutation) sessionChanges.current?.postMessage('changed');
         setIdentity({ status: 'unknown' });
         setOperation({ status: 'failed', message: 'Не удалось подтвердить состояние сессии. Проверьте соединение.' });
       }

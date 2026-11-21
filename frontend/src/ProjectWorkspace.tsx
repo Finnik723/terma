@@ -4,7 +4,7 @@ import { csrfHeaders } from './csrf';
 
 type Project = { id: string; name: string; createdBy: string; createdAt: string; updatedAt: string };
 type Resource<T> = { status: 'loading' | 'missing' | 'failed' } | { status: 'ready'; data: T };
-type Submission = { status: 'idle' | 'pending' | 'uncertain' } | { status: 'failed'; message: string };
+type Submission = { status: 'idle' | 'pending' } | { status: 'failed'; message: string };
 type Props = { username: string; onSessionChanged: () => void };
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -74,11 +74,12 @@ function ProjectList(props: Props) {
   const [name, setName] = useState('');
   const [submission, setSubmission] = useState<Submission>({ status: 'idle' });
   const active = useRef<AbortController | null>(null);
+  const attempt = useRef<{ name: string; key: string } | null>(null);
   useEffect(() => () => active.current?.abort(), []);
 
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (active.current || resource.status !== 'ready' || submission.status === 'uncertain') return;
+    if (active.current || resource.status !== 'ready') return;
     const normalized = name.replace(/^\p{White_Space}+|(?<!\p{White_Space})\p{White_Space}+$/gu, '');
     if (!normalized || Array.from(normalized).length > 120 || /[\p{Cc}\p{Cs}]/u.test(normalized)) {
       setSubmission({ status: 'failed', message: invalidName });
@@ -92,10 +93,12 @@ function ProjectList(props: Props) {
     let submitted = false;
     try {
       const headers = await csrfHeaders(signal);
+      const key = attempt.current?.name === normalized ? attempt.current.key : crypto.randomUUID();
+      attempt.current = { name: normalized, key };
       submitted = true;
       const response = await fetch('/api/projects', {
         method: 'POST', credentials: 'same-origin', signal,
-        headers: { ...headers, 'Content-Type': 'application/json', [expectedUsername]: username },
+        headers: { ...headers, 'Content-Type': 'application/json', [expectedUsername]: username, 'Idempotency-Key': key },
         body: JSON.stringify({ name: normalized }),
       });
       if (controller.signal.aborted) return;
@@ -103,7 +106,10 @@ function ProjectList(props: Props) {
         onSessionChanged();
       } else if (response.status === 400) {
         setSubmission({ status: 'failed', message: invalidName });
+      } else if (response.status === 404) {
+        setSubmission({ status: 'failed', message: missingProject });
       } else if (response.status === 201) {
+        attempt.current = null;
         setName('');
         setSubmission({ status: 'idle' });
         reload();
@@ -112,8 +118,9 @@ function ProjectList(props: Props) {
       }
     } catch {
       if (!controller.signal.aborted) {
-        setSubmission(submitted ? { status: 'uncertain' }
-          : { status: 'failed', message: 'Не удалось отправить запрос. Проверьте соединение.' });
+        setSubmission({ status: 'failed', message: submitted
+          ? 'Не удалось подтвердить создание. Проверьте соединение и повторите отправку.'
+          : 'Не удалось отправить запрос. Проверьте соединение.' });
       }
     } finally {
       active.current = null;
@@ -142,12 +149,9 @@ function ProjectList(props: Props) {
         disabled={submission.status === 'pending'} onChange={event => setName(event.target.value)}/>
       <p id="project-name-hint">От 1 до 120 символов</p>
       {submission.status === 'failed' && <p role="alert">{submission.message}</p>}
-      {submission.status === 'uncertain'
-        ? <><p role="alert">Не удалось подтвердить создание. Обновите список и проверьте, появился ли проект.</p>
-          <button type="button" onClick={() => { setSubmission({ status: 'idle' }); reload(); }}>Обновить список</button></>
-        : <button type="submit" disabled={submission.status === 'pending'}>
-          {submission.status === 'pending' ? 'Создаём…' : 'Создать проект'}
-        </button>}
+      <button type="submit" disabled={submission.status === 'pending'}>
+        {submission.status === 'pending' ? 'Создаём…' : 'Создать проект'}
+      </button>
     </form>}
   </section>;
 }

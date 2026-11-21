@@ -48,6 +48,7 @@ public class ProjectController {
     @PostMapping
     ResponseEntity<Project> create(@AuthenticationPrincipal AccountPrincipal account,
                                    @RequestHeader(name = EXPECTED_USERNAME, required = false) String expectedUsername,
+                                   @RequestHeader(name = "Idempotency-Key", required = false) UUID creationKey,
                                    @RequestBody JsonNode request) {
         UUID accountId = accountId(account, expectedUsername);
         var field = request.path("name");
@@ -56,8 +57,9 @@ public class ProjectController {
                 || INVALID_NAME_CODE_POINT.matcher(name).find()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid project name");
         }
-        var project = projects.create(accountId, name);
-        return ResponseEntity.created(URI.create("/api/projects/" + project.id())).body(project);
+        return projects.create(accountId, name, creationKey)
+            .map(project -> ResponseEntity.created(URI.create("/api/projects/" + project.id())).body(project))
+            .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     private static UUID accountId(AccountPrincipal account, String expectedUsername) {
