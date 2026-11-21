@@ -308,6 +308,11 @@ class PostgreSqlIT {
                     "{\"name\":\"A\\u0000B\"}", json.writeValueAsString(Map.of("name", "a".repeat(121)))}) {
                 assertEquals(400, request(owner, port, "/api/projects", invalid, csrf, "application/json").statusCode());
             }
+            for (String invalid : new String[]{"", "1-1-1-1-1"}) {
+                var invalidKey = buildRequest(port, "/api/projects", "{\"name\":\"Invalid key\"}", csrf, "application/json",
+                    Map.of("Idempotency-Key", invalid));
+                assertEquals(400, owner.send(invalidKey, HttpResponse.BodyHandlers.ofString()).statusCode());
+            }
             assertEquals("0", scalar("SELECT count(*) FROM project"));
 
             String name = "Опыт " + "🧪".repeat(115);

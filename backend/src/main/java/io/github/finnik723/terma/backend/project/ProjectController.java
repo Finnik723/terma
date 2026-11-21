@@ -24,6 +24,7 @@ import tools.jackson.databind.JsonNode;
 public class ProjectController {
     private static final String EXPECTED_USERNAME = "X-Expected-Username";
     private static final int MAX_NAME_LENGTH = 120;
+    private static final Pattern UUID_FORMAT = Pattern.compile("(?i)[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}");
     private static final Pattern INVALID_NAME_CODE_POINT = Pattern.compile("[\\p{Cc}\\p{Cs}]");
     // Each whitespace run is considered once, even in a long invalid request.
     private static final Pattern OUTER_WHITESPACE = Pattern.compile("(?U)\\A\\s++|(?<!\\s)\\s++\\z");
@@ -48,7 +49,7 @@ public class ProjectController {
     @PostMapping
     ResponseEntity<Project> create(@AuthenticationPrincipal AccountPrincipal account,
                                    @RequestHeader(name = EXPECTED_USERNAME, required = false) String expectedUsername,
-                                   @RequestHeader(name = "Idempotency-Key", required = false) UUID creationKey,
+                                   @RequestHeader(name = "Idempotency-Key", required = false) String keyHeader,
                                    @RequestBody JsonNode request) {
         UUID accountId = accountId(account, expectedUsername);
         var field = request.path("name");
@@ -57,7 +58,7 @@ public class ProjectController {
                 || INVALID_NAME_CODE_POINT.matcher(name).find()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid project name");
         }
-        return projects.create(accountId, name, creationKey)
+        return projects.create(accountId, name, creationKey(keyHeader))
             .map(project -> ResponseEntity.created(URI.create("/api/projects/" + project.id())).body(project))
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -67,5 +68,13 @@ public class ProjectController {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Session account changed");
         }
         return account.accountId();
+    }
+
+    private static UUID creationKey(String header) {
+        if (header == null) return null;
+        if (!UUID_FORMAT.matcher(header).matches()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid idempotency key");
+        }
+        return UUID.fromString(header);
     }
 }
