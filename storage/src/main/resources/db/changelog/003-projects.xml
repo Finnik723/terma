@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.31.xsd">
+  <changeSet id="003-projects" author="terma">
+    <sql dbms="postgresql"><![CDATA[
+      CREATE TABLE project (
+        id UUID PRIMARY KEY,
+        name VARCHAR(120) NOT NULL CHECK (char_length(name) > 0),
+        created_by UUID NOT NULL REFERENCES user_account(id),
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP CHECK (updated_at >= created_at)
+      );
+
+      CREATE TABLE project_member (
+        project_id UUID NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+        user_id UUID NOT NULL REFERENCES user_account(id),
+        role VARCHAR(6) NOT NULL CHECK (role IN ('OWNER', 'EDITOR', 'VIEWER')),
+        PRIMARY KEY (project_id, user_id)
+      );
+
+      CREATE INDEX project_member_user_project_idx ON project_member (user_id, project_id);
+    ]]></sql>
+  </changeSet>
+</databaseChangeLog>

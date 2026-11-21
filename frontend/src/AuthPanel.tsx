@@ -1,13 +1,29 @@
-import { useEffect, useRef, useState } from 'react';
-import type { FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { FormEvent, ReactNode } from 'react';
+import { csrfHeaders } from './csrf';
 
 type Session = { username: string };
-type Csrf = { headerName: string; token: string };
 type Identity = { status: 'unknown' } | { status: 'anonymous' } | { status: 'authenticated'; session: Session };
 type Operation = { status: 'idle' } | { status: 'pending' } | { status: 'failed'; message: string };
 
+type Props = {
+  children?: (session: Session, restore: () => void) => ReactNode;
+  anonymousContent?: ReactNode;
+};
+
+async function readSession(signal: AbortSignal) {
+  const response = await fetch('/api/auth/session', { credentials: 'same-origin', cache: 'no-store', signal });
+  if (response.status === 401) return null;
+  if (!response.ok) throw new Error('Session unavailable');
+  const value: unknown = await response.json();
+  if (!value || typeof value !== 'object' || !('username' in value) || typeof value.username !== 'string') {
+    throw new Error('Unexpected session');
+  }
+  return { username: value.username };
+}
+
 // Neither credentials nor the CSRF token are persisted in browser storage.
-export function AuthPanel() {
+export function AuthPanel({ children, anonymousContent }: Props) {
   const [identity, setIdentity] = useState<Identity>({ status: 'unknown' });
   const [operation, setOperation] = useState<Operation>({ status: 'pending' });
   const busy = operation.status === 'pending';
@@ -15,25 +31,15 @@ export function AuthPanel() {
   const [password, setPassword] = useState('');
   const active = useRef<AbortController | null>(null);
 
-  function acceptSession(session: Session | null) {
+  const acceptSession = useCallback((session: Session | null) => {
     setIdentity(session ? { status: 'authenticated', session } : { status: 'anonymous' });
-  }
+  }, []);
 
-  async function readSession(signal: AbortSignal) {
-    const response = await fetch('/api/auth/session', { credentials: 'same-origin', cache: 'no-store', signal });
-    if (response.status === 401) return null;
-    if (!response.ok) throw new Error('Session unavailable');
-    const value: unknown = await response.json();
-    if (!value || typeof value !== 'object' || !('username' in value) || typeof value.username !== 'string') {
-      throw new Error('Unexpected session');
-    }
-    return { username: value.username };
-  }
-
-  async function restore() {
+  const restore = useCallback(async () => {
     active.current?.abort();
     const controller = new AbortController();
     active.current = controller;
+    setIdentity({ status: 'unknown' });
     setOperation({ status: 'pending' });
     try {
       const current = await readSession(AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]));
@@ -47,12 +53,19 @@ export function AuthPanel() {
         setOperation({ status: 'failed', message: 'Не удалось проверить сессию. Проверьте соединение.' });
       }
     }
-  }
+  }, [acceptSession]);
 
   useEffect(() => {
     void restore();
-    return () => { active.current?.abort(); };
-  }, []);
+    function recheckOnRestore(event: PageTransitionEvent) {
+      if (event.persisted) void restore();
+    }
+    window.addEventListener('pageshow', recheckOnRestore);
+    return () => {
+      window.removeEventListener('pageshow', recheckOnRestore);
+      active.current?.abort();
+    };
+  }, [restore]);
 
   async function mutate(action: 'login' | 'logout') {
     if (busy) return;
@@ -62,13 +75,10 @@ export function AuthPanel() {
     const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]);
     try {
       // Obtain a fresh token before each mutation: login/logout rotate the session/token.
-      const tokenResponse = await fetch('/api/auth/csrf', { credentials: 'same-origin', cache: 'no-store', signal });
-      if (!tokenResponse.ok) throw new Error('CSRF unavailable');
-      const csrf = await tokenResponse.json() as Csrf;
-      if (csrf.headerName !== 'X-CSRF-TOKEN' || typeof csrf.token !== 'string') throw new Error('Invalid CSRF response');
+      const headers = await csrfHeaders(signal);
       const response = await fetch(`/api/auth/${action}`, {
         method: 'POST', credentials: 'same-origin', signal,
-        headers: { [csrf.headerName]: csrf.token, 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded' },
         body: action === 'login' ? new URLSearchParams({ username, password }) : undefined,
       });
       if (action === 'login') setPassword('');
@@ -102,7 +112,7 @@ export function AuthPanel() {
     void mutate('login');
   }
 
-  return <section className="card" aria-labelledby="auth-title">
+  return <><section className="card" aria-labelledby="auth-title">
     <h2 id="auth-title">Учётная запись</h2>
     {identity.status === 'unknown' && (busy
       ? <p>Проверяем сессию…</p>
@@ -122,5 +132,7 @@ export function AuthPanel() {
           <button disabled={busy} type="submit">{busy ? 'Входим…' : 'Войти'}</button>
         </form>}
     {operation.status === 'failed' && <p role="alert">{operation.message}</p>}
-  </section>;
+  </section>
+    {identity.status === 'authenticated' ? !busy && children?.(identity.session, restore) : anonymousContent}
+  </>;
 }

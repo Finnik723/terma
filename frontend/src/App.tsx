@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AuthPanel } from './AuthPanel';
+import { ProjectWorkspace } from './ProjectWorkspace';
 
 type Status = 'idle' | 'checking' | 'success' | 'error';
 const messages: Record<Status, string> = {
@@ -10,6 +11,15 @@ const messages: Record<Status, string> = {
 };
 
 export function App() {
+  return <main>
+    <header><span className="brand">TERMA</span><span className="stage">Термодинамическое моделирование</span></header>
+    <AuthPanel anonymousContent={window.location.pathname === '/' ? <ConnectionStatus/> : null}>
+      {(session, restore) => <ProjectWorkspace key={session.username} onSessionExpired={restore}/>}
+    </AuthPanel>
+  </main>;
+}
+
+function ConnectionStatus() {
   const [status, setStatus] = useState<Status>('idle');
   const request = useRef<AbortController | null>(null);
   useEffect(() => () => { request.current?.abort(); request.current = null; }, []);
@@ -41,11 +51,8 @@ export function App() {
     }
   }
 
-  return <main>
-    <header><span className="brand">TERMA</span><span className="stage">Окружение разработки</span></header>
-    <section className="intro"><p className="eyebrow">Термодинамическое моделирование</p>
-      <h1>Технический каркас</h1><p>Научные расчёты недоступны. Доступны вход в учётную запись и проверка HTTP-связи с backend.</p></section>
-    <AuthPanel/>
+  return <>
+    <section className="intro"><h1>Технический каркас</h1></section>
     <section className="card" aria-labelledby="connection-title">
       <div><h2 id="connection-title">Связь с backend</h2><p>Ответ процесса не подтверждает готовность БД, брокера или расчётной подсистемы.</p></div>
       <p role="status" aria-live="polite" className={`status ${status}`}><span className="dot"/>{messages[status]}</p>
@@ -56,5 +63,5 @@ export function App() {
         <div><dt>Worker</dt><dd>Не проверен из браузера</dd></div>
         <div><dt>Научная подсистема</dt><dd>Не реализована</dd></div></dl></section>
     <footer>Terma · Каркас приложения и окружение разработки</footer>
-  </main>;
+  </>;
 }
