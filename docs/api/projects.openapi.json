@@ -1,0 +1,113 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "Terma projects API", "version": "1.0.0" },
+  "servers": [{ "url": "/" }],
+  "security": [{ "sessionCookie": [] }],
+  "paths": {
+    "/api/projects": {
+      "parameters": [{ "$ref": "#/components/parameters/ExpectedUsername" }],
+      "get": {
+        "operationId": "listProjects",
+        "summary": "Список доступных проектов, начиная с последних изменённых",
+        "responses": {
+          "200": {
+            "description": "Проекты, в которых есть запись участия текущего пользователя. Если таких проектов нет, возвращается пустой массив.",
+            "content": { "application/json": {
+              "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Project" } }
+            } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthenticated" },
+          "409": { "$ref": "#/components/responses/AccountChanged" }
+        }
+      },
+      "post": {
+        "operationId": "createProject",
+        "summary": "Создать проект и назначить текущему пользователю доступ OWNER",
+        "parameters": [{
+          "in": "header",
+          "name": "X-CSRF-TOKEN",
+          "required": true,
+          "description": "Токен из GET /api/auth/csrf для той же session cookie.",
+          "schema": { "type": "string", "minLength": 1 }
+        }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": {
+            "type": "object",
+            "required": ["name"],
+            "properties": { "name": {
+              "type": "string",
+              "description": "От 1 до 120 кодовых точек после удаления крайних пробельных символов Unicode. Управляющие символы внутри названия и непарные суррогаты отклоняются."
+            } }
+          } } }
+        },
+        "responses": {
+          "201": {
+            "description": "Проект и участие OWNER сохранены в одной транзакции.",
+            "headers": { "Location": {
+              "required": true,
+              "description": "Путь /api/projects/{id} созданного проекта.",
+              "schema": { "type": "string", "format": "uri-reference" }
+            } },
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Project" } } }
+          },
+          "400": { "description": "Некорректный JSON или недопустимое название проекта." },
+          "401": { "$ref": "#/components/responses/Unauthenticated" },
+          "403": { "description": "CSRF-токен отсутствует или недействителен. Эта проверка выполняется перед проверкой аутентифицированной сессии." },
+          "409": { "$ref": "#/components/responses/AccountChanged" }
+        }
+      }
+    },
+    "/api/projects/{id}": {
+      "parameters": [
+        { "in": "path", "name": "id", "required": true, "schema": { "type": "string", "format": "uuid" } },
+        { "$ref": "#/components/parameters/ExpectedUsername" }
+      ],
+      "get": {
+        "operationId": "getProject",
+        "summary": "Открыть доступный проект по UUID",
+        "responses": {
+          "200": {
+            "description": "Проект, в котором есть запись участия текущего пользователя.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Project" } } }
+          },
+          "400": { "description": "Идентификатор не удалось прочитать как UUID." },
+          "401": { "$ref": "#/components/responses/Unauthenticated" },
+          "404": { "description": "Проект отсутствует либо у текущего пользователя нет доступа. Ответ одинаков в обоих случаях." },
+          "409": { "$ref": "#/components/responses/AccountChanged" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": { "type": "apiKey", "in": "cookie", "name": "JSESSIONID", "description": "Аутентифицированная HTTP-сессия." }
+    },
+    "parameters": {
+      "ExpectedUsername": {
+        "in": "header",
+        "name": "X-Expected-Username",
+        "description": "Имя из GET /api/auth/session, которое показывает клиент. При несовпадении с именем из текущей сессии запрос отклоняется. Права определяются по UUID из сессии.",
+        "schema": { "type": "string" }
+      }
+    },
+    "responses": {
+      "Unauthenticated": { "description": "Сессия отсутствует или пользователь ещё не вошёл." },
+      "AccountChanged": { "description": "Учётная запись из сессии отличается от X-Expected-Username." }
+    },
+    "schemas": {
+      "Project": {
+        "type": "object",
+        "required": ["id", "name", "createdBy", "createdAt", "updatedAt"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "createdBy": { "type": "string", "description": "Имя учётной записи автора." },
+          "createdAt": { "type": "string", "format": "date-time", "description": "Время создания в UTC." },
+          "updatedAt": { "type": "string", "format": "date-time", "description": "Время изменения в UTC." }
+        }
+      }
+    }
+  }
+}

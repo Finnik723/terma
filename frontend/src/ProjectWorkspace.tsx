@@ -5,12 +5,13 @@ import { csrfHeaders } from './csrf';
 type Project = { id: string; name: string; createdBy: string; createdAt: string; updatedAt: string };
 type Resource<T> = { status: 'loading' | 'missing' | 'failed' } | { status: 'ready'; data: T };
 type Submission = { status: 'idle' | 'pending' | 'uncertain' } | { status: 'failed'; message: string };
-type Props = { onSessionExpired: () => void };
+type Props = { username: string; onSessionChanged: () => void };
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const dates = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'medium', timeStyle: 'short' });
 const invalidName = 'Введите название длиной от 1 до 120 символов без управляющих символов.';
 const missingProject = 'Проект не найден или у вас нет доступа.';
+const expectedUsername = 'X-Expected-Username';
 
 function projectData(value: unknown): Project {
   if (!value || typeof value !== 'object' || !('id' in value) || typeof value.id !== 'string' || !uuid.test(value.id)
@@ -27,7 +28,7 @@ function projectListData(value: unknown) {
   return value.map(projectData);
 }
 
-function useProjectResource<T>(url: string, parse: (value: unknown) => T, onSessionExpired: () => void) {
+function useProjectResource<T>(url: string, parse: (value: unknown) => T, { username, onSessionChanged }: Props) {
   const [resource, setResource] = useState<Resource<T>>({ status: 'loading' });
   const [revision, setRevision] = useState(0);
 
@@ -36,10 +37,12 @@ function useProjectResource<T>(url: string, parse: (value: unknown) => T, onSess
     const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]);
     async function load() {
       try {
-        const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store', signal });
+        const response = await fetch(url, {
+          credentials: 'same-origin', cache: 'no-store', signal, headers: { [expectedUsername]: username },
+        });
         if (controller.signal.aborted) return;
-        if (response.status === 401) {
-          onSessionExpired();
+        if (response.status === 401 || response.status === 409) {
+          onSessionChanged();
           return;
         }
         if (response.status === 404) {
@@ -55,7 +58,7 @@ function useProjectResource<T>(url: string, parse: (value: unknown) => T, onSess
     }
     void load();
     return () => controller.abort();
-  }, [url, parse, onSessionExpired, revision]);
+  }, [url, parse, username, onSessionChanged, revision]);
 
   function reload() {
     setResource({ status: 'loading' });
@@ -65,8 +68,9 @@ function useProjectResource<T>(url: string, parse: (value: unknown) => T, onSess
   return { resource, reload };
 }
 
-function ProjectList({ onSessionExpired }: Props) {
-  const { resource, reload } = useProjectResource('/api/projects', projectListData, onSessionExpired);
+function ProjectList(props: Props) {
+  const { username, onSessionChanged } = props;
+  const { resource, reload } = useProjectResource('/api/projects', projectListData, props);
   const [name, setName] = useState('');
   const [submission, setSubmission] = useState<Submission>({ status: 'idle' });
   const active = useRef<AbortController | null>(null);
@@ -91,16 +95,14 @@ function ProjectList({ onSessionExpired }: Props) {
       submitted = true;
       const response = await fetch('/api/projects', {
         method: 'POST', credentials: 'same-origin', signal,
-        headers: { ...headers, 'Content-Type': 'application/json' },
+        headers: { ...headers, 'Content-Type': 'application/json', [expectedUsername]: username },
         body: JSON.stringify({ name: normalized }),
       });
       if (controller.signal.aborted) return;
-      if (response.status === 401) {
-        onSessionExpired();
+      if (response.status === 401 || response.status === 403 || response.status === 409) {
+        onSessionChanged();
       } else if (response.status === 400) {
         setSubmission({ status: 'failed', message: invalidName });
-      } else if (response.status === 403) {
-        setSubmission({ status: 'failed', message: 'Не удалось подтвердить сессию. Повторите попытку.' });
       } else if (response.status === 201) {
         setName('');
         setSubmission({ status: 'idle' });
@@ -150,8 +152,8 @@ function ProjectList({ onSessionExpired }: Props) {
   </section>;
 }
 
-function ProjectDetail({ id, onSessionExpired }: Props & { id: string }) {
-  const { resource, reload } = useProjectResource(`/api/projects/${id}`, projectData, onSessionExpired);
+function ProjectDetail({ id, ...props }: Props & { id: string }) {
+  const { resource, reload } = useProjectResource(`/api/projects/${id}`, projectData, props);
   return <>
     <a className="project-back" href="/">Все проекты</a>
     <section className="card project-workspace" aria-labelledby="project-title">
@@ -171,11 +173,11 @@ function ProjectDetail({ id, onSessionExpired }: Props & { id: string }) {
   </>;
 }
 
-export function ProjectWorkspace({ onSessionExpired }: Props) {
+export function ProjectWorkspace(props: Props) {
   const path = window.location.pathname;
-  if (path === '/' || path === '/projects' || path === '/projects/') return <ProjectList onSessionExpired={onSessionExpired}/>;
+  if (path === '/' || path === '/projects' || path === '/projects/') return <ProjectList {...props}/>;
   const id = /^\/projects\/([^/]+)\/?$/.exec(path)?.[1];
-  if (id && uuid.test(id)) return <ProjectDetail id={id} onSessionExpired={onSessionExpired}/>;
+  if (id && uuid.test(id)) return <ProjectDetail id={id} {...props}/>;
   return <>
     <a className="project-back" href="/">Все проекты</a>
     <section className="card project-workspace" aria-labelledby="project-title">

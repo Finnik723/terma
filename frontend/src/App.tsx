@@ -14,7 +14,8 @@ export function App() {
   return <main>
     <header><span className="brand">TERMA</span><span className="stage">Термодинамическое моделирование</span></header>
     <AuthPanel anonymousContent={window.location.pathname === '/' ? <ConnectionStatus/> : null}>
-      {(session, restore) => <ProjectWorkspace key={session.username} onSessionExpired={restore}/>}
+      {(session, onSessionChanged) => <ProjectWorkspace key={session.username} username={session.username}
+        onSessionChanged={onSessionChanged}/>}
     </AuthPanel>
   </main>;
 }

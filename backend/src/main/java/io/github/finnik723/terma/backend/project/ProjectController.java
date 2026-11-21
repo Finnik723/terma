@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,6 +22,7 @@ import tools.jackson.databind.JsonNode;
 @RestController
 @RequestMapping("/api/projects")
 public class ProjectController {
+    private static final String EXPECTED_USERNAME = "X-Expected-Username";
     private static final int MAX_NAME_LENGTH = 120;
     private static final Pattern INVALID_NAME_CODE_POINT = Pattern.compile("[\\p{Cc}\\p{Cs}]");
     // Each whitespace run is considered once, even in a long invalid request.
@@ -31,24 +33,37 @@ public class ProjectController {
     public ProjectController(ProjectService projects) { this.projects = projects; }
 
     @GetMapping
-    List<Project> list(@AuthenticationPrincipal AccountPrincipal account) {
-        return projects.list(account.accountId());
+    List<Project> list(@AuthenticationPrincipal AccountPrincipal account,
+                       @RequestHeader(name = EXPECTED_USERNAME, required = false) String expectedUsername) {
+        return projects.list(accountId(account, expectedUsername));
     }
 
     @GetMapping("/{id}")
-    ResponseEntity<Project> get(@AuthenticationPrincipal AccountPrincipal account, @PathVariable UUID id) {
-        return ResponseEntity.of(projects.find(account.accountId(), id));
+    ResponseEntity<Project> get(@AuthenticationPrincipal AccountPrincipal account,
+                                @RequestHeader(name = EXPECTED_USERNAME, required = false) String expectedUsername,
+                                @PathVariable UUID id) {
+        return ResponseEntity.of(projects.find(accountId(account, expectedUsername), id));
     }
 
     @PostMapping
-    ResponseEntity<Project> create(@AuthenticationPrincipal AccountPrincipal account, @RequestBody JsonNode request) {
+    ResponseEntity<Project> create(@AuthenticationPrincipal AccountPrincipal account,
+                                   @RequestHeader(name = EXPECTED_USERNAME, required = false) String expectedUsername,
+                                   @RequestBody JsonNode request) {
+        UUID accountId = accountId(account, expectedUsername);
         var field = request.path("name");
         String name = field.isString() ? OUTER_WHITESPACE.matcher(field.asString()).replaceAll("") : "";
         if (name.isEmpty() || name.codePointCount(0, name.length()) > MAX_NAME_LENGTH
                 || INVALID_NAME_CODE_POINT.matcher(name).find()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid project name");
         }
-        var project = projects.create(account.accountId(), name);
+        var project = projects.create(accountId, name);
         return ResponseEntity.created(URI.create("/api/projects/" + project.id())).body(project);
+    }
+
+    private static UUID accountId(AccountPrincipal account, String expectedUsername) {
+        if (expectedUsername != null && !account.getUsername().equals(expectedUsername)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Session account changed");
+        }
+        return account.accountId();
     }
 }

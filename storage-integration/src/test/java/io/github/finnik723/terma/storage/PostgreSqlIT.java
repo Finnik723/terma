@@ -206,8 +206,14 @@ class PostgreSqlIT {
     }
 
     private HttpResponse<String> request(HttpClient client, int port, String path, String body, String token, String contentType) throws Exception {
+        return request(client, port, path, body, token, contentType, null);
+    }
+
+    private HttpResponse<String> request(HttpClient client, int port, String path, String body, String token, String contentType,
+                                         String expectedUsername) throws Exception {
         var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + path)).timeout(Duration.ofSeconds(10));
         if (token != null) request.header("X-CSRF-TOKEN", token);
+        if (expectedUsername != null) request.header("X-Expected-Username", expectedUsername);
         if (body == null) request.GET();
         else request.header("Content-Type", contentType).POST(HttpRequest.BodyPublishers.ofString(body));
         return client.send(request.build(), HttpResponse.BodyHandlers.ofString());
@@ -292,6 +298,8 @@ class PostgreSqlIT {
             var owner = projectSession(port, "demo1", first);
             var other = projectSession(port, "demo2", second);
             assertEquals("[]", auth(owner, port, "/api/projects", null, null).body());
+            assertEquals(409, request(other, port, "/api/projects", null, null, "application/json", "demo1").statusCode());
+            assertEquals(409, request(other, port, "/api/projects", "{\"name\":\"Wrong tab\"}", token(other, port), "application/json", "demo1").statusCode());
             assertEquals(403, request(owner, port, "/api/projects", "{\"name\":\"Project\"}", null, "application/json").statusCode());
             String csrf = token(owner, port);
             for (String invalid : new String[]{"{}", "{\"name\":null}", "{\"name\":42}", "{\"name\":\" \u00a0 \"}",
@@ -300,7 +308,7 @@ class PostgreSqlIT {
             }
             assertEquals("0", scalar("SELECT count(*) FROM project"));
 
-            String name = "Опыт ".concat("🧪".repeat(115));
+            String name = "Опыт " + "🧪".repeat(115);
             var created = request(owner, port, "/api/projects", json.writeValueAsString(Map.of("name", " \u00a0" + name + "\t", "createdBy", "demo2")),
                 csrf, "application/json");
             assertEquals(201, created.statusCode());

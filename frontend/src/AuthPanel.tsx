@@ -7,7 +7,7 @@ type Identity = { status: 'unknown' } | { status: 'anonymous' } | { status: 'aut
 type Operation = { status: 'idle' } | { status: 'pending' } | { status: 'failed'; message: string };
 
 type Props = {
-  children?: (session: Session, restore: () => void) => ReactNode;
+  children?: (session: Session, onSessionChanged: () => void) => ReactNode;
   anonymousContent?: ReactNode;
 };
 
@@ -35,7 +35,7 @@ export function AuthPanel({ children, anonymousContent }: Props) {
     setIdentity(session ? { status: 'authenticated', session } : { status: 'anonymous' });
   }, []);
 
-  const restore = useCallback(async () => {
+  const restore = useCallback(async (sessionChanged = false) => {
     active.current?.abort();
     const controller = new AbortController();
     active.current = controller;
@@ -45,7 +45,10 @@ export function AuthPanel({ children, anonymousContent }: Props) {
       const current = await readSession(AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]));
       if (!controller.signal.aborted) {
         acceptSession(current);
-        setOperation({ status: 'idle' });
+        setOperation(sessionChanged ? {
+          status: 'failed', message: current ? 'Сессия изменилась. Проверьте учётную запись и повторите действие.'
+            : 'Сессия завершилась. Войдите снова.',
+        } : { status: 'idle' });
       }
     } catch {
       if (!controller.signal.aborted) {
@@ -54,6 +57,8 @@ export function AuthPanel({ children, anonymousContent }: Props) {
       }
     }
   }, [acceptSession]);
+
+  const restoreChangedSession = useCallback(() => { void restore(true); }, [restore]);
 
   useEffect(() => {
     void restore();
@@ -133,6 +138,6 @@ export function AuthPanel({ children, anonymousContent }: Props) {
         </form>}
     {operation.status === 'failed' && <p role="alert">{operation.message}</p>}
   </section>
-    {identity.status === 'authenticated' ? !busy && children?.(identity.session, restore) : anonymousContent}
+    {identity.status === 'authenticated' ? !busy && children?.(identity.session, restoreChangedSession) : anonymousContent}
   </>;
 }

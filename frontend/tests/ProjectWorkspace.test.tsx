@@ -34,7 +34,7 @@ test('starts with projects after restoring a session, validates the name, and cr
   expect(link.getAttribute('href')).toBe(`/projects/${project.id}`);
   expect(fetchMock.mock.calls[2][0]).toBe('/api/auth/csrf');
   expect(fetchMock.mock.calls[3]).toEqual(['/api/projects', expect.objectContaining({
-    method: 'POST', headers: { 'X-CSRF-TOKEN': csrf.token, 'Content-Type': 'application/json' },
+    method: 'POST', headers: { 'X-CSRF-TOKEN': csrf.token, 'Content-Type': 'application/json', 'X-Expected-Username': 'demo1' },
     body: JSON.stringify({ name: project.name }),
   })]);
 });
@@ -43,7 +43,7 @@ test('list failure leaves a retry, and a lost create response reloads without re
   const fetchMock = vi.fn().mockResolvedValueOnce(json({}, 503)).mockResolvedValueOnce(json([]))
     .mockResolvedValueOnce(json(csrf)).mockRejectedValueOnce(new Error('response lost')).mockResolvedValueOnce(json([project]));
   vi.stubGlobal('fetch', fetchMock);
-  render(<ProjectWorkspace onSessionExpired={vi.fn()}/>);
+  render(<ProjectWorkspace username="demo1" onSessionChanged={vi.fn()}/>);
   await screen.findByText('Не удалось загрузить проекты. Проверьте соединение.');
   fireEvent.click(screen.getByRole('button', { name: 'Повторить загрузку' }));
   const name = await screen.findByLabelText('Название проекта');
@@ -78,6 +78,22 @@ test('discards the project view when the backend session has expired', async () 
   vi.stubGlobal('fetch', fetchMock);
   render(<App/>);
   await screen.findByRole('button', { name: 'Войти' });
+  expect(screen.getByRole('alert').textContent).toBe('Сессия завершилась. Войдите снова.');
   expect(screen.queryByRole('heading', { name: 'Проекты' })).toBeNull();
   expect(fetchMock.mock.calls.map(([path]) => path)).toEqual(['/api/auth/session', '/api/projects', '/api/auth/session']);
+});
+
+test.each([403, 409])('rechecks the account after a rejected create (%s) without retrying the write', async status => {
+  const fetchMock = vi.fn().mockResolvedValueOnce(json({ username: 'demo1' })).mockResolvedValueOnce(json([project]))
+    .mockResolvedValueOnce(json(csrf)).mockResolvedValueOnce(json({}, status)).mockResolvedValueOnce(json({ username: 'demo2' }))
+    .mockResolvedValueOnce(json([]));
+  vi.stubGlobal('fetch', fetchMock);
+  render(<App/>);
+  fireEvent.change(await screen.findByLabelText('Название проекта'), { target: { value: 'Другой проект' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Создать проект' }));
+  await screen.findByText('demo2');
+  expect(screen.queryByRole('link', { name: project.name })).toBeNull();
+  await screen.findByText('У вас пока нет доступных проектов. Создайте первый проект.');
+  expect(fetchMock.mock.calls.filter(([, options]) => options.method === 'POST')).toHaveLength(1);
+  expect(fetchMock.mock.lastCall?.[1].headers).toEqual({ 'X-Expected-Username': 'demo2' });
 });
