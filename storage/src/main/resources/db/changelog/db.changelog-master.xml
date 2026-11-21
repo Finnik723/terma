@@ -7,4 +7,5 @@
     <sql dbms="postgresql">SELECT 1;</sql>
   </changeSet>
   <include file="db/changelog/002-accounts.xml"/>
+  <include file="db/changelog/003-projects.xml"/>
 </databaseChangeLog>

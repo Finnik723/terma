@@ -1,7 +1,7 @@
 package io.github.finnik723.terma.backend.auth;
 
+import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -13,10 +13,9 @@ public class AccountDetailsService implements UserDetailsService {
     public AccountDetailsService(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
     @Override public UserDetails loadUserByUsername(String username) {
-        var accounts = jdbc.query("SELECT username, password_hash, enabled FROM user_account WHERE username = ?",
-            (row, index) -> User.withUsername(row.getString("username"))
-                .password(row.getString("password_hash")).disabled(!row.getBoolean("enabled"))
-                .authorities("ROLE_USER").build(), username);
+        var accounts = jdbc.query("SELECT id, username, password_hash, enabled FROM user_account WHERE username = ?",
+            (row, index) -> new AccountPrincipal(row.getObject("id", UUID.class), row.getString("username"),
+                row.getString("password_hash"), row.getBoolean("enabled")), username);
         if (accounts.isEmpty()) throw new UsernameNotFoundException("Invalid credentials");
         return accounts.getFirst();
     }

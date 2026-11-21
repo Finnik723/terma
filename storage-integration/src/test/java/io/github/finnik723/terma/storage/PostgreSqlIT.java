@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -108,24 +109,24 @@ class PostgreSqlIT {
 
     @Test void bothApplicationsMigrateOnceAndPreserveCommittedDataOnRestart() throws Exception {
         worker();
-        assertEquals("2", scalar("SELECT count(*) FROM databasechangelog"));
+        assertEquals("3", scalar("SELECT count(*) FROM databasechangelog"));
         String checksum = scalar("SELECT md5sum FROM databasechangelog WHERE id='001-storage-baseline'");
         // A test-owned table, never shipped as a domain table or migration.
         sql("CREATE TABLE storage_probe (value text NOT NULL)");
         sql("INSERT INTO storage_probe VALUES ('committed-before-restart')");
         try (var backend = launch("backend", Map.of())) { backend.ready(); }
         worker();
-        assertEquals("2", scalar("SELECT count(*) FROM databasechangelog"));
+        assertEquals("3", scalar("SELECT count(*) FROM databasechangelog"));
         assertEquals(checksum, scalar("SELECT md5sum FROM databasechangelog WHERE id='001-storage-baseline'"));
         assertEquals("committed-before-restart", scalar("SELECT value FROM storage_probe"));
-        assertEquals("4", scalar("SELECT count(*) FROM information_schema.tables WHERE table_schema=current_schema()"));
+        assertEquals("6", scalar("SELECT count(*) FROM information_schema.tables WHERE table_schema=current_schema()"));
     }
 
     @Test void simultaneousCleanStartupUsesOneHistory() throws Exception {
         try (var backend = launch("backend", Map.of()); var worker = launch("worker", Map.of())) {
             backend.ready();
             worker.ready();
-            assertEquals("2", scalar("SELECT count(*) FROM databasechangelog"));
+            assertEquals("3", scalar("SELECT count(*) FROM databasechangelog"));
             assertEquals("false", scalar("SELECT locked::text FROM databasechangeloglock"));
         }
     }
@@ -197,15 +198,24 @@ class PostgreSqlIT {
         }
         assertEquals("true", scalar("SELECT locked::text FROM databasechangeloglock"));
         assertEquals("integration-test", scalar("SELECT lockedby FROM databasechangeloglock"));
-        assertEquals("2", scalar("SELECT count(*) FROM databasechangelog"));
+        assertEquals("3", scalar("SELECT count(*) FROM databasechangelog"));
     }
 
     private HttpResponse<String> auth(HttpClient client, int port, String path, String body, String token) throws Exception {
+        return request(client, port, path, body, token, "application/x-www-form-urlencoded");
+    }
+
+    private HttpResponse<String> request(HttpClient client, int port, String path, String body, String token, String contentType) throws Exception {
+        return client.send(buildRequest(port, path, body, token, contentType, Map.of()), HttpResponse.BodyHandlers.ofString());
+    }
+
+    private HttpRequest buildRequest(int port, String path, String body, String token, String contentType, Map<String, String> headers) {
         var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + path)).timeout(Duration.ofSeconds(10));
         if (token != null) request.header("X-CSRF-TOKEN", token);
+        headers.forEach(request::header);
         if (body == null) request.GET();
-        else request.header("Content-Type", "application/x-www-form-urlencoded").POST(HttpRequest.BodyPublishers.ofString(body));
-        return client.send(request.build(), HttpResponse.BodyHandlers.ofString());
+        else request.header("Content-Type", contentType).POST(HttpRequest.BodyPublishers.ofString(body));
+        return request.build();
     }
 
     private String token(HttpClient client, int port) throws Exception {
@@ -261,6 +271,100 @@ class PostgreSqlIT {
         try (var backend = launch("backend", Map.of("TERMA_DEMO_ACCOUNTS_ENABLED", "true", "TERMA_DEMO_PASSWORD_1", UUID.randomUUID().toString(), "TERMA_DEMO_PASSWORD_2", ""))) {
             backend.failed(60, "TERMA_DEMO_PASSWORD_2 must");
             assertEquals("0", scalar("SELECT count(*) FROM user_account"));
+        }
+    }
+
+    private HttpClient projectSession(int port, String username, String password) throws Exception {
+        var client = HttpClient.newBuilder().cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ALL)).build();
+        assertEquals(204, auth(client, port, "/api/auth/login", "username=" + username + "&password=" + password, token(client, port)).statusCode());
+        return client;
+    }
+
+    @Test void projectCreationMembershipAndPersistenceUseRealHttpAndPostgreSql() throws Exception {
+        var json = JsonMapper.builder().build();
+        String first = UUID.randomUUID().toString();
+        String second = UUID.randomUUID().toString();
+        var provision = Map.of("TERMA_DEMO_ACCOUNTS_ENABLED", "true", "TERMA_DEMO_PASSWORD_1", first, "TERMA_DEMO_PASSWORD_2", second);
+        String projectPath;
+        String saved;
+        try (var backend = launch("backend", provision)) {
+            backend.ready();
+            int port = backend.port;
+            var anonymous = HttpClient.newBuilder().cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ALL)).build();
+            assertEquals(401, auth(anonymous, port, "/api/projects", null, null).statusCode());
+            assertEquals(401, request(anonymous, port, "/api/projects", "{}", token(anonymous, port), "application/json").statusCode());
+
+            var owner = projectSession(port, "demo1", first);
+            var other = projectSession(port, "demo2", second);
+            assertEquals("[]", auth(owner, port, "/api/projects", null, null).body());
+            var staleSession = Map.of("X-Expected-Username", "demo1");
+            var listFromStaleTab = buildRequest(port, "/api/projects", null, null, "application/json", staleSession);
+            var createFromStaleTab = buildRequest(port, "/api/projects", "{\"name\":\"Wrong tab\"}", token(other, port), "application/json", staleSession);
+            assertEquals(409, other.send(listFromStaleTab, HttpResponse.BodyHandlers.ofString()).statusCode());
+            assertEquals(409, other.send(createFromStaleTab, HttpResponse.BodyHandlers.ofString()).statusCode());
+            assertEquals(403, request(owner, port, "/api/projects", "{\"name\":\"Project\"}", null, "application/json").statusCode());
+            String csrf = token(owner, port);
+            for (String invalid : new String[]{"{}", "{\"name\":null}", "{\"name\":42}", "{\"name\":\" \u00a0 \"}",
+                    "{\"name\":\"A\\u0000B\"}", json.writeValueAsString(Map.of("name", "a".repeat(121)))}) {
+                assertEquals(400, request(owner, port, "/api/projects", invalid, csrf, "application/json").statusCode());
+            }
+            for (String invalid : new String[]{"", "1-1-1-1-1"}) {
+                var invalidKey = buildRequest(port, "/api/projects", "{\"name\":\"Invalid key\"}", csrf, "application/json",
+                    Map.of("Idempotency-Key", invalid));
+                assertEquals(400, owner.send(invalidKey, HttpResponse.BodyHandlers.ofString()).statusCode());
+            }
+            assertEquals("0", scalar("SELECT count(*) FROM project"));
+
+            String name = "Опыт " + "🧪".repeat(115);
+            var create = buildRequest(port, "/api/projects", json.writeValueAsString(Map.of("name", " \u00a0" + name + "\t", "createdBy", "demo2")),
+                csrf, "application/json", Map.of("Idempotency-Key", UUID.randomUUID().toString()));
+            var firstRequest = owner.sendAsync(create, HttpResponse.BodyHandlers.ofString());
+            var repeatedRequest = owner.sendAsync(create, HttpResponse.BodyHandlers.ofString());
+            var created = firstRequest.get(15, TimeUnit.SECONDS);
+            var repeated = repeatedRequest.get(15, TimeUnit.SECONDS);
+            assertEquals(201, created.statusCode());
+            saved = created.body();
+            assertEquals(201, repeated.statusCode());
+            assertEquals(saved, repeated.body());
+            var project = json.readTree(saved);
+            UUID id = UUID.fromString(project.get("id").asString());
+            projectPath = "/api/projects/" + id;
+            assertEquals(projectPath, created.headers().firstValue("Location").orElseThrow());
+            assertEquals(name, project.get("name").asString());
+            assertEquals("demo1", project.get("createdBy").asString());
+            assertEquals(Instant.parse(project.get("createdAt").asString()), Instant.parse(project.get("updatedAt").asString()));
+            assertEquals("demo1:OWNER", scalar("SELECT username || ':' || role FROM project_member JOIN user_account ON id=user_id"));
+            assertEquals(json.readTree("[" + saved + "]"), json.readTree(auth(owner, port, "/api/projects", null, null).body()));
+            assertEquals(saved, auth(owner, port, projectPath, null, null).body());
+
+            assertEquals(401, auth(anonymous, port, projectPath, null, null).statusCode());
+            assertEquals("[]", auth(other, port, "/api/projects", null, null).body());
+            var forbidden = auth(other, port, projectPath, null, null);
+            var unknown = auth(other, port, "/api/projects/" + UUID.randomUUID(), null, null);
+            assertEquals(404, forbidden.statusCode());
+            assertEquals(404, unknown.statusCode());
+            assertEquals(unknown.body(), forbidden.body());
+            assertTrue(forbidden.body().isEmpty());
+
+            try (var connection = connection(); var insert = connection.prepareStatement("""
+                    INSERT INTO project_member (project_id, user_id, role)
+                    SELECT ?, id, 'VIEWER' FROM user_account WHERE username='demo2'
+                    """)) {
+                insert.setObject(1, id);
+                assertEquals(1, insert.executeUpdate());
+            }
+            assertEquals(saved, auth(other, port, projectPath, null, null).body());
+            assertEquals(json.readTree("[" + saved + "]"), json.readTree(auth(other, port, "/api/projects", null, null).body()));
+
+            sql("ALTER TABLE project_member ADD CONSTRAINT reject_new_owner CHECK (role <> 'OWNER') NOT VALID");
+            assertEquals(500, request(owner, port, "/api/projects", "{\"name\":\"Roll back\"}", csrf, "application/json").statusCode());
+            assertEquals("1", scalar("SELECT count(*) FROM project"));
+            assertEquals("2", scalar("SELECT count(*) FROM project_member"));
+        }
+        try (var backend = launch("backend", Map.of())) {
+            backend.ready();
+            var owner = projectSession(backend.port, "demo1", first);
+            assertEquals(saved, auth(owner, backend.port, projectPath, null, null).body());
         }
     }
 
